@@ -22,7 +22,10 @@
         "prettier"
     ],
     "rules": {
-      "prettier/prettier": ["error", { "semi": false, "endOfLine": "auto" }],
+      "prettier/prettier": [
+          "error",
+          { "semi": false, "endOfLine": "auto", "singleQuote": true, "doubleQuote": false }
+      ],
       "semi": "off",
       "arrow-body-style": "off",
       "react-in-jsx-scope": "off",
