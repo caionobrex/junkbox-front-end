@@ -1,13 +1,13 @@
 import { AppBar, Toolbar, Typography } from '@mui/material'
 import { NextPage } from 'next'
 
-const NewPlayList: NextPage = (): JSX.Element => {
+const Songs: NextPage = (): JSX.Element => {
   return (
     <>
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Criar Playlist
+            Adicionar Música
           </Typography>
         </Toolbar>
       </AppBar>
@@ -16,4 +16,4 @@ const NewPlayList: NextPage = (): JSX.Element => {
   )
 }
 
-export default NewPlayList
+export default Songs
