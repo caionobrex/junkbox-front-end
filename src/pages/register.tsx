@@ -14,6 +14,9 @@ import Router from 'next/router'
 import { useForm, Controller } from 'react-hook-form'
 import * as yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
+import { AxiosResponse } from 'axios'
+import { useCallback } from 'react'
+import api from '@/services/api'
 
 interface RegisterFormModel {
   email: string
@@ -36,9 +39,18 @@ const Register: NextPage = (): JSX.Element => {
     resolver: yupResolver(schema),
   })
 
-  const onSubmit = async (values: RegisterFormModel): Promise<void> => {
-    alert(values.email)
-  }
+  const onSubmit = useCallback(
+    async (values: RegisterFormModel): Promise<void> => {
+      try {
+        const res: AxiosResponse = await api.post('/auth/register', values)
+        window.localStorage.setItem('token', res.data.accessToken)
+        Router.replace('/')
+      } catch (err) {
+        alert('error')
+      }
+    },
+    []
+  )
 
   return (
     <>
@@ -55,6 +67,8 @@ const Register: NextPage = (): JSX.Element => {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
+          maxWidth: '25rem',
+          marginInline: 'auto',
           px: 3,
         }}
       >

@@ -15,31 +15,49 @@ import Head from 'next/head'
 import Link from 'next/link'
 import Router from 'next/router'
 import { useCallback } from 'react'
+import usePlaylists from '@/hooks/dataHooks/usePlaylists'
+import useUser from '@/hooks/dataHooks/useUser'
 
-function PlaylistCard() {
+function PlaylistCard({ playlist }) {
+  const [user, loading] = useUser()
+
   return (
-    <Card sx={{ display: 'flex' }} onClick={() => Router.push('/test')}>
+    <Card
+      sx={{ display: 'flex' }}
+      onClick={() => Router.push(`/${playlist.id}`)}
+    >
       <CardMedia
         component="img"
         sx={{ width: 151 }}
         image="https://mui.com/static/images/cards/live-from-space.jpg"
         alt="Live from space album cover"
       />
-      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
         <CardContent sx={{ flex: '1 0 auto' }}>
           <Typography component="div" variant="h6">
-            JunkBox Playlist
+            {playlist.name}
           </Typography>
           <Typography
             variant="subtitle1"
             color="text.secondary"
             component="div"
           >
-            Mac Miller
+            {playlist?.user?.name || 'Mac'}
           </Typography>
         </CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', pl: 2, pb: 1 }}>
-          <Typography>items: 2</Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 2,
+            pb: 1,
+          }}
+        >
+          <Typography>items: {playlist.tracksCount}</Typography>
+          {!loading && user && user.id === playlist?.user?.id && (
+            <Box>Play</Box>
+          )}
         </Box>
       </Box>
     </Card>
@@ -47,6 +65,8 @@ function PlaylistCard() {
 }
 
 const Home: NextPage = () => {
+  const [playlists, loading, error] = usePlaylists()
+
   const handleOnClickFab = useCallback(() => Router.push('/new-playlist'), [])
 
   return (
@@ -74,39 +94,32 @@ const Home: NextPage = () => {
           {/* <IconButton color="inherit">
             <Icon>person</Icon>
           </IconButton> */}
+          <Link href="/login">login</Link>
         </Toolbar>
       </AppBar>
-
       <Box
         sx={{
           display: 'flex',
-          mt: 9,
+          mt: 8,
           flexDirection: 'column',
           rowGap: 1,
+          maxWidth: '28rem',
+          marginInline: 'auto',
         }}
       >
-        <PlaylistCard />
-        <PlaylistCard />
-        <PlaylistCard />
-        <PlaylistCard />
-        <PlaylistCard />
-        <PlaylistCard />
-        <PlaylistCard />
-        <PlaylistCard />
-        <PlaylistCard />
-        <PlaylistCard />
+        {!loading &&
+          !error &&
+          playlists.map((playlist) => <PlaylistCard playlist={playlist} />)}
       </Box>
 
       <Fab
         color="primary"
         aria-label="add"
-        sx={{ position: 'fixed', bottom: 36, right: 20 }}
+        sx={{ position: 'fixed', bottom: 65, right: 20 }}
         onClick={handleOnClickFab}
       >
         <Icon>add</Icon>
       </Fab>
-
-      <Link href="/login">login</Link>
     </>
   )
 }

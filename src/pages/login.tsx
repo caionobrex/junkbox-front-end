@@ -14,6 +14,10 @@ import { useTheme } from '@mui/material/styles'
 import { useForm, Controller } from 'react-hook-form'
 import * as yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
+import { AxiosResponse } from 'axios'
+import { useCallback, useEffect } from 'react'
+import api from '@/services/api'
+import useUser from '@/hooks/dataHooks/useUser'
 
 interface LoginFormModel {
   username: string
@@ -22,17 +26,35 @@ interface LoginFormModel {
 
 const schema = yup.object().shape({
   username: yup.string().required('obrigatório').min(2),
-  password: yup
-    .string()
-    .required('obrigatório')
-    .min(4, 'pelo menos 4 caracteres'),
+  password: yup.string().required('obrigatório'),
 })
 
-const Login: NextPage = (): JSX.Element => {
+const Login: NextPage = (): JSX.Element | null => {
+  const [user, loading] = useUser()
   const theme = useTheme()
   const { control, handleSubmit } = useForm<LoginFormModel>({
     resolver: yupResolver(schema),
   })
+
+  const onSubmit = useCallback(
+    async (values: LoginFormModel): Promise<void> => {
+      try {
+        const res: AxiosResponse = await api.post('/auth/login', values)
+        window.localStorage.setItem('token', res.data.accessToken)
+        Router.replace('/')
+      } catch (err) {
+        alert('error')
+      }
+    },
+    []
+  )
+
+  useEffect(() => {
+    if (loading) return
+    if (user) Router.replace('/')
+  }, [user, loading])
+
+  if (loading) return null
 
   return (
     <>
@@ -49,6 +71,8 @@ const Login: NextPage = (): JSX.Element => {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
+          maxWidth: '25rem',
+          marginInline: 'auto',
           px: 3,
         }}
       >
@@ -60,7 +84,7 @@ const Login: NextPage = (): JSX.Element => {
             Login
           </Typography>
         </Box>
-        <form onSubmit={handleSubmit(() => {})}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2 }}>
             <Controller
               control={control}
@@ -134,7 +158,7 @@ const Login: NextPage = (): JSX.Element => {
               display: 'flex',
               justifyContent: 'center',
             }}
-            onClick={() => Router.replace('/register')}
+            onClick={() => Router.push('/register')}
           >
             <Typography>
               Não tem conta?{' '}

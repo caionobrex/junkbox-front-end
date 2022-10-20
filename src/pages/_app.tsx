@@ -3,6 +3,8 @@ import 'normalize.css'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import { createTheme, ThemeProvider } from '@mui/material'
+import Player from '@/components/Player'
+import useUser from '@/hooks/dataHooks/useUser'
 
 const theme = createTheme({
   palette: {
@@ -13,6 +15,8 @@ const theme = createTheme({
 })
 
 function MyApp({ Component, pageProps, router }: AppProps) {
+  const [user, loading, error] = useUser()
+
   return (
     <ThemeProvider theme={theme}>
       <Head>
@@ -27,6 +31,7 @@ function MyApp({ Component, pageProps, router }: AppProps) {
         <link rel="manifest" href="/manifest.json" />
       </Head>
       <Component {...pageProps} key={router.route} />
+      {!loading && user && !error && <Player />}
     </ThemeProvider>
   )
 }
