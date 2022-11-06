@@ -84,26 +84,6 @@ export default function Player(): JSX.Element {
     if (typeof window !== 'undefined') {
       setHasWindow(true)
     }
-    player.setPlaylist([
-      {
-        name: 'Test',
-        externalId: 'VHoT4N43jK8',
-        position: 0,
-        duration: 200,
-      },
-      {
-        name: 'Test',
-        externalId: 'fSjkMXxdwvs',
-        position: 1,
-        duration: 200,
-      },
-    ])
-    player.setCurrentTrack({
-      name: 'Test',
-      externalId: 'VHoT4N43jK8',
-      position: 0,
-      duration: 200,
-    })
   }, [])
 
   return (
@@ -160,8 +140,9 @@ export default function Player(): JSX.Element {
         </Box>
         <Typography>{player.currentTrack?.name}</Typography>
         <IconButton onClick={toggle}>
-          <Icon>play_arrow</Icon>
+          <Icon sx={{ color: theme.palette.primary.main }}>play_arrow</Icon>
         </IconButton>
+        <button onClick={nextOne}>ds</button>
       </Box>
     </Box>
   )

@@ -79,7 +79,7 @@ function ItemCard({ item, addTrackHandler }: { item: YoutubeItem }) {
           }}
         >
           <Typography>Audio</Typography>
-          <Button type="button" onClick={addTrackHandler}>
+          <Button type="button" onClick={addTrackHandler(item.id.videoId)}>
             add
           </Button>
         </Box>
@@ -89,6 +89,7 @@ function ItemCard({ item, addTrackHandler }: { item: YoutubeItem }) {
 }
 
 const Songs: NextPage = (): JSX.Element => {
+  const [user, loading] = useUser()
   const [tracks, setTracks] = useState<YoutubeItem[]>([])
   const [searchValue, setSearchValue] = useState([])
   const { socket, connected } = useSocket()
@@ -96,11 +97,17 @@ const Songs: NextPage = (): JSX.Element => {
 
   const selectTrackHandler = useCallback(() => {}, [])
 
-  const addTrackHandler = useCallback(() => {
-    if (socket && connected) {
-      socket?.emit('addTrack', { playlistId: router.query.id })
-    }
-  }, [socket, connected, router])
+  const addTrackHandler = useCallback(
+    (videoId: string) => () => {
+      if (socket && connected) {
+        socket?.emit('addTrack', {
+          playlistId: router.query.id,
+          externalId: videoId,
+        })
+      }
+    },
+    [socket, connected, router]
+  )
 
   useEffect(() => {
     // TODO - make request to youtube to retrieve data
@@ -143,13 +150,13 @@ const Songs: NextPage = (): JSX.Element => {
         kind: 'youtube#searchResult',
         etag: 'LIForApwTxnS41faG5p3M7vCpWY',
         id: {
-          kind: 'youtube#video',
-          videoId: 'M7Z2tgJo8Hg',
+          kind: 'youtube#ideo',
+          videoId: 'CW7gfrTlr0Y',
         },
         snippet: {
           publishedAt: '2022-03-07T19:00:11Z',
           channelId: 'UCFKo78ysxmRhoQ85ySEo_PQ',
-          title: 'Stromae - Fils de joie (Official Music Video)',
+          title: 'Stromae - Santé | The Tonight Show Starring Jimmy Fallon',
           description: `Stromae – Fils de joie Listen to « Mon amour » : https://stromae.lnk.to/monamourxcamila Order my new album « Multitude » here: ...`,
           thumbnails: {
             default: {
@@ -243,6 +250,10 @@ const Songs: NextPage = (): JSX.Element => {
       },
     ])
   }, [])
+
+  useEffect(() => {
+    if (!loading && !user) router.replace('/login')
+  }, [user, loading])
 
   return (
     <>

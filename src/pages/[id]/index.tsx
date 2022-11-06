@@ -80,19 +80,17 @@ function PlaylistItemCard({
                 {track.position}
               </Box>
             </Typography>
-            -
-            <Typography>
-              Votos:{' '}
-              <Box component="span" sx={{ fontWeight: 700 }}>
-                {track.upvoteCount}
-              </Box>
+          </Box>
+          <Box>
+            <IconButton onClick={() => onUpVote(track.id)}>
+              <Icon sx={{ color: theme.palette.primary.main }}>
+                keyboard_arrow_up
+              </Icon>
+            </IconButton>
+            <Typography component="span" sx={{ fontWeight: 700 }}>
+              {track.upvoteCount}
             </Typography>
           </Box>
-          <IconButton onClick={() => onUpVote(track.id)}>
-            <Icon sx={{ color: theme.palette.primary.main }}>
-              keyboard_arrow_up
-            </Icon>
-          </IconButton>
         </Box>
       </Box>
     </Card>
@@ -101,6 +99,7 @@ function PlaylistItemCard({
 
 const PlayList: NextPage = (): JSX.Element => {
   const [playlist, setPlaylist] = useState<any>(null)
+  const [tracks, setTracks] = useState<any[]>([])
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false)
   const { socket, connected } = useSocket()
   const router: NextRouter = useRouter()
@@ -115,12 +114,12 @@ const PlayList: NextPage = (): JSX.Element => {
     if (!socket || !connected || !router.isReady) return
     socket?.emit('joinPlaylist', { playlistId: router.query.id })
     socket?.on('addTrack', (track: any) => {
-      setPlaylist((current: Track[]) => [...current, track])
+      setTracks((current: Track[]) => [...current, track])
       setShowSnackbar(true)
     })
     socket?.on('removeTrack', () => {})
     socket?.on('upVoteTrack', (trackId: number, upVoteCount: number) => {
-      setPlaylist((current: Track[]) =>
+      setTracks((current: Track[]) =>
         current.map((track: Track) => {
           if (track.id === trackId) {
             track.upvoteCount = upVoteCount
@@ -133,9 +132,16 @@ const PlayList: NextPage = (): JSX.Element => {
 
   useEffect(() => {
     if (!router.isReady) return
-    api.get(`/playlists/${router.query.id}`).then((res: AxiosResponse) => {
-      setPlaylist(res.data)
-    })
+    Promise.all([
+      api.get(`/playlists/${router.query.id}`).then((res: AxiosResponse) => {
+        setPlaylist(res.data)
+      }),
+      api
+        .get(`/playlists/${router.query.id}/tracks`)
+        .then((res: AxiosResponse) => {
+          setTracks(res.data)
+        }),
+    ])
   }, [router])
 
   return (
@@ -149,6 +155,7 @@ const PlayList: NextPage = (): JSX.Element => {
             <IconButton
               onClick={() => {
                 player.setPlaylist(playlist.tracks)
+                player.setCurrentTrack(playlist.tracks[5])
                 player.toggle()
               }}
             >
@@ -161,7 +168,6 @@ const PlayList: NextPage = (): JSX.Element => {
           )}
         </Toolbar>
       </AppBar>
-
       <Box
         sx={{
           display: 'flex',
@@ -173,7 +179,7 @@ const PlayList: NextPage = (): JSX.Element => {
           marginInline: 'auto',
         }}
       >
-        {playlist?.tracks
+        {tracks
           .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1))
           .map((track: Track, index: number) => (
             <PlaylistItemCard
@@ -182,7 +188,6 @@ const PlayList: NextPage = (): JSX.Element => {
             />
           ))}
       </Box>
-
       <Fab
         color="primary"
         aria-label="add"
@@ -191,7 +196,6 @@ const PlayList: NextPage = (): JSX.Element => {
       >
         <Icon>add</Icon>
       </Fab>
-
       <Snackbar
         open={showSnackbar}
         autoHideDuration={2000}
