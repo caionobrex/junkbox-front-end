@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { NextRouter, useRouter } from 'next/router'
 import useSocket from '@/hooks/useSocket'
 import useUser from '@/hooks/dataHooks/useUser'
+import useYoutubeVideos from '@/hooks/dataHooks/useYoutubeVideos'
 
 interface YoutubeItem {
   kind: string
@@ -79,7 +80,10 @@ function ItemCard({ item, addTrackHandler }: { item: YoutubeItem }) {
           }}
         >
           <Typography>Audio</Typography>
-          <Button type="button" onClick={addTrackHandler(item.id.videoId)}>
+          <Button
+            type="button"
+            onClick={addTrackHandler(item.id?.videoId || item.id)}
+          >
             add
           </Button>
         </Box>
@@ -90,7 +94,7 @@ function ItemCard({ item, addTrackHandler }: { item: YoutubeItem }) {
 
 const Songs: NextPage = (): JSX.Element => {
   const [user, loading] = useUser()
-  const [tracks, setTracks] = useState<YoutubeItem[]>([])
+  const [tracks] = useYoutubeVideos()
   const [searchValue, setSearchValue] = useState([])
   const { socket, connected } = useSocket()
   const router: NextRouter = useRouter()
@@ -109,147 +113,7 @@ const Songs: NextPage = (): JSX.Element => {
     [socket, connected, router]
   )
 
-  useEffect(() => {
-    // TODO - make request to youtube to retrieve data
-    setTracks([
-      {
-        kind: 'youtube#searchResult',
-        etag: 'LIForApwTxnS41faG5p3M7vCpWY',
-        id: {
-          kind: 'youtube#video',
-          videoId: 'M7Z2tgJo8Hg',
-        },
-        snippet: {
-          publishedAt: '2022-03-07T19:00:11Z',
-          channelId: 'UCFKo78ysxmRhoQ85ySEo_PQ',
-          title: 'Stromae - Fils de joie (Official Music Video)',
-          description: `Stromae – Fils de joie Listen to « Mon amour » : https://stromae.lnk.to/monamourxcamila Order my new album « Multitude » here: ...`,
-          thumbnails: {
-            default: {
-              url: 'https://i.ytimg.com/vi/M7Z2tgJo8Hg/default.jpg',
-              width: 120,
-              height: 90,
-            },
-            medium: {
-              url: 'https://i.ytimg.com/vi/M7Z2tgJo8Hg/mqdefault.jpg',
-              width: 320,
-              height: 180,
-            },
-            high: {
-              url: 'https://i.ytimg.com/vi/M7Z2tgJo8Hg/hqdefault.jpg',
-              width: 480,
-              height: 360,
-            },
-          },
-          channelTitle: 'StromaeVEVO',
-          liveBroadcastContent: 'none',
-          publishTime: '2022-03-07T19:00:11Z',
-        },
-      },
-      {
-        kind: 'youtube#searchResult',
-        etag: 'LIForApwTxnS41faG5p3M7vCpWY',
-        id: {
-          kind: 'youtube#ideo',
-          videoId: 'CW7gfrTlr0Y',
-        },
-        snippet: {
-          publishedAt: '2022-03-07T19:00:11Z',
-          channelId: 'UCFKo78ysxmRhoQ85ySEo_PQ',
-          title: 'Stromae - Santé | The Tonight Show Starring Jimmy Fallon',
-          description: `Stromae – Fils de joie Listen to « Mon amour » : https://stromae.lnk.to/monamourxcamila Order my new album « Multitude » here: ...`,
-          thumbnails: {
-            default: {
-              url: 'https://i.ytimg.com/vi/M7Z2tgJo8Hg/default.jpg',
-              width: 120,
-              height: 90,
-            },
-            medium: {
-              url: 'https://i.ytimg.com/vi/M7Z2tgJo8Hg/mqdefault.jpg',
-              width: 320,
-              height: 180,
-            },
-            high: {
-              url: 'https://i.ytimg.com/vi/M7Z2tgJo8Hg/hqdefault.jpg',
-              width: 480,
-              height: 360,
-            },
-          },
-          channelTitle: 'StromaeVEVO',
-          liveBroadcastContent: 'none',
-          publishTime: '2022-03-07T19:00:11Z',
-        },
-      },
-      {
-        kind: 'youtube#searchResult',
-        etag: 'LIForApwTxnS41faG5p3M7vCpWY',
-        id: {
-          kind: 'youtube#video',
-          videoId: 'M7Z2tgJo8Hg',
-        },
-        snippet: {
-          publishedAt: '2022-03-07T19:00:11Z',
-          channelId: 'UCFKo78ysxmRhoQ85ySEo_PQ',
-          title: 'Stromae - Fils de joie (Official Music Video)',
-          description: `Stromae – Fils de joie Listen to « Mon amour » : https://stromae.lnk.to/monamourxcamila Order my new album « Multitude » here: ...`,
-          thumbnails: {
-            default: {
-              url: 'https://i.ytimg.com/vi/M7Z2tgJo8Hg/default.jpg',
-              width: 120,
-              height: 90,
-            },
-            medium: {
-              url: 'https://i.ytimg.com/vi/M7Z2tgJo8Hg/mqdefault.jpg',
-              width: 320,
-              height: 180,
-            },
-            high: {
-              url: 'https://i.ytimg.com/vi/M7Z2tgJo8Hg/hqdefault.jpg',
-              width: 480,
-              height: 360,
-            },
-          },
-          channelTitle: 'StromaeVEVO',
-          liveBroadcastContent: 'none',
-          publishTime: '2022-03-07T19:00:11Z',
-        },
-      },
-      {
-        kind: 'youtube#searchResult',
-        etag: 'LIForApwTxnS41faG5p3M7vCpWY',
-        id: {
-          kind: 'youtube#video',
-          videoId: 'M7Z2tgJo8Hg',
-        },
-        snippet: {
-          publishedAt: '2022-03-07T19:00:11Z',
-          channelId: 'UCFKo78ysxmRhoQ85ySEo_PQ',
-          title: 'Stromae - Fils de joie (Official Music Video)',
-          description: `Stromae – Fils de joie Listen to « Mon amour » : https://stromae.lnk.to/monamourxcamila Order my new album « Multitude » here: ...`,
-          thumbnails: {
-            default: {
-              url: 'https://i.ytimg.com/vi/M7Z2tgJo8Hg/default.jpg',
-              width: 120,
-              height: 90,
-            },
-            medium: {
-              url: 'https://i.ytimg.com/vi/M7Z2tgJo8Hg/mqdefault.jpg',
-              width: 320,
-              height: 180,
-            },
-            high: {
-              url: 'https://i.ytimg.com/vi/M7Z2tgJo8Hg/hqdefault.jpg',
-              width: 480,
-              height: 360,
-            },
-          },
-          channelTitle: 'StromaeVEVO',
-          liveBroadcastContent: 'none',
-          publishTime: '2022-03-07T19:00:11Z',
-        },
-      },
-    ])
-  }, [])
+  useEffect(() => {}, [])
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
@@ -277,9 +141,10 @@ const Songs: NextPage = (): JSX.Element => {
         </Box>
 
         <Box display="flex" flexDirection="column" rowGap={1} mt={2}>
-          {tracks.map((item: YoutubeItem) => (
-            <ItemCard item={item} addTrackHandler={addTrackHandler} />
-          ))}
+          {tracks &&
+            tracks.items.map((item: YoutubeItem) => (
+              <ItemCard item={item} addTrackHandler={addTrackHandler} />
+            ))}
         </Box>
       </Box>
     </>

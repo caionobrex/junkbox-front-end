@@ -40,7 +40,8 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   pause: () => set(() => ({ isPlaying: false })),
   toggle: () => set((state) => ({ isPlaying: !state.isPlaying })),
   setCurrentTime: (currentTime: number) => set(() => ({ currentTime })),
-  setPlaylist: (playlist: Track[]) => set(() => ({ playlist })),
+  setPlaylist: (playlist: Track[]) =>
+    set(() => ({ playlist: playlist.map((p, i) => ({ ...p, position: i })) })),
 }))
 
 export default function Player(): JSX.Element {
@@ -142,7 +143,15 @@ export default function Player(): JSX.Element {
         <IconButton onClick={toggle}>
           <Icon sx={{ color: theme.palette.primary.main }}>play_arrow</Icon>
         </IconButton>
-        <button onClick={nextOne}>ds</button>
+        <button type="button" onClick={previousOne}>
+          previus
+        </button>
+        <button type="button" onClick={nextOne}>
+          ds
+        </button>
+        <button type="button" onClick={skipTo(200)}>
+          skip
+        </button>
       </Box>
     </Box>
   )

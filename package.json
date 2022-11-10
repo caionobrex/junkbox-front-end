@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.10.4",
     "@emotion/styled": "^11.10.4",
+    "@formkit/auto-animate": "^1.0.0-beta.3",
     "@hookform/resolvers": "^2.8.10",
     "@mui/material": "^5.10.6",
     "axios": "^0.27.2",
@@ -21,6 +22,7 @@
     "normalize.css": "^8.0.1",
     "react": "18.1.0",
     "react-dom": "18.1.0",
+    "react-flip-move": "^3.0.4",
     "react-hook-form": "^7.35.0",
     "react-icons": "^4.3.1",
     "react-player": "^2.11.0",

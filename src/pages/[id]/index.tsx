@@ -17,7 +17,6 @@ import { useEffect, useState } from 'react'
 import { AxiosResponse } from 'axios'
 import useSocket from '@/hooks/useSocket'
 import api from '@/services/api'
-import useUser from '@/hooks/dataHooks/useUser'
 import { usePlayerStore } from '@/components/Player'
 
 interface Track {
@@ -98,13 +97,12 @@ function PlaylistItemCard({
 }
 
 const PlayList: NextPage = (): JSX.Element => {
-  const [playlist, setPlaylist] = useState<any>(null)
+  const [, setPlaylist] = useState<any>(null)
   const [tracks, setTracks] = useState<any[]>([])
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false)
   const { socket, connected } = useSocket()
   const router: NextRouter = useRouter()
   const player = usePlayerStore()
-  const [user, loading] = useUser()
 
   const handleUpVote = (trackId: number) => {
     socket?.emit('upVoteTrack', { playlistId: router.query.id, trackId })
@@ -119,16 +117,20 @@ const PlayList: NextPage = (): JSX.Element => {
     })
     socket?.on('removeTrack', () => {})
     socket?.on('upVoteTrack', (trackId: number, upVoteCount: number) => {
-      setTracks((current: Track[]) =>
-        current.map((track: Track) => {
-          if (track.id === trackId) {
-            track.upvoteCount = upVoteCount
-          }
-          return track
-        })
-      )
+      setTracks((current: Track[]) => {
+        current = current
+          .map((track: Track) => {
+            if (track.id === trackId) {
+              track.upvoteCount = upVoteCount
+            }
+            return track
+          })
+          .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1))
+        player.setPlaylist(current)
+        return current
+      })
     })
-  }, [socket, connected, router])
+  }, [socket, connected, router, player])
 
   useEffect(() => {
     if (!router.isReady) return
@@ -151,11 +153,11 @@ const PlayList: NextPage = (): JSX.Element => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Playlist
           </Typography>
-          {!loading && user && playlist && user.id === playlist.userId && (
+          {true && (
             <IconButton
               onClick={() => {
-                player.setPlaylist(playlist.tracks)
-                player.setCurrentTrack(playlist.tracks[5])
+                player.setPlaylist(tracks)
+                player.setCurrentTrack({ ...tracks[0], position: 0 })
                 player.toggle()
               }}
             >
@@ -179,14 +181,12 @@ const PlayList: NextPage = (): JSX.Element => {
           marginInline: 'auto',
         }}
       >
-        {tracks
-          .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1))
-          .map((track: Track, index: number) => (
-            <PlaylistItemCard
-              track={{ ...track, position: index + 1 }}
-              onUpVote={handleUpVote}
-            />
-          ))}
+        {tracks.map((track: Track, index: number) => (
+          <PlaylistItemCard
+            track={{ ...track, position: index + 1 }}
+            onUpVote={handleUpVote}
+          />
+        ))}
       </Box>
       <Fab
         color="primary"
