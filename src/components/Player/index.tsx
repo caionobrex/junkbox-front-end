@@ -1,5 +1,4 @@
 import { Box, Icon, IconButton, Typography, useTheme } from '@mui/material'
-import Image from 'next/image'
 import { createRef, useCallback, useEffect, useState } from 'react'
 import ReactPlayer from 'react-player'
 import create from 'zustand'
@@ -7,6 +6,7 @@ import create from 'zustand'
 interface Track {
   id: number
   name: string
+  image?: string
   externalId: string
   upvoteCount: number
   addedBy: {
@@ -55,30 +55,31 @@ export default function Player(): JSX.Element {
     else player.play()
   }, [player])
 
-  const skipTo = useCallback(
-    (valueInSeconds: number) => () => {
-      if (!ref.current) return
-      ref.current.seekTo(valueInSeconds)
-    },
-    [ref]
-  )
+  // const skipTo = useCallback(
+  //   (valueInSeconds: number) => () => {
+  //     if (!ref.current) return
+  //     ref.current.seekTo(valueInSeconds)
+  //   },
+  //   [ref]
+  // )
 
-  const previousOne = useCallback(() => {
-    if (!player.currentTrack) return
-    if (player?.currentTrack?.position === 0) return
-    player.setCurrentTrack(player.playlist[player.currentTrack.position - 1])
-  }, [player])
+  // const previousOne = useCallback(() => {
+  //   if (!player.currentTrack) return
+  //   if (player?.currentTrack?.position === 0) return
+  //   player.setCurrentTrack(player.playlist[player.currentTrack.position - 1])
+  // }, [player])
 
-  const nextOne = useCallback(() => {
-    if (!player.currentTrack) return
-    if (player?.currentTrack?.position === player.playlist.length - 1) return
-    player.setCurrentTrack(player.playlist[player.currentTrack.position + 1])
-  }, [player])
+  // const nextOne = useCallback(() => {
+  //   if (!player.currentTrack) return
+  //   if (player?.currentTrack?.position === player.playlist.length - 1) return
+  //   player.setCurrentTrack(player.playlist[player.currentTrack.position + 1])
+  // }, [player])
 
   const handleOnEnd = useCallback(() => {
     if (!player.currentTrack) return
     if (player.currentTrack.position === player.playlist.length - 1) return
     player.setCurrentTrack(player.playlist[player.currentTrack.position + 1])
+    // TODO - EMMIT EVENT TO REMOVE SONG FROM PLAYLIST
   }, [player])
 
   useEffect(() => {
@@ -129,21 +130,35 @@ export default function Player(): JSX.Element {
         sx={{
           width: '100%',
           display: 'flex',
+          justifyContent: 'space-between',
           columnGap: 1,
         }}
       >
-        <Box>
-          <Image
-            src="https://i.ytimg.com/vi/JWA5hJl4Dv0/default.jpg"
-            width="70px"
-            height="50px"
-          />
+        <Box sx={{ display: 'flex', columnGap: 1 }}>
+          <Box sx={{ display: 'flex', width: '5rem', height: '3rem' }}>
+            <img
+              src={
+                player.currentTrack?.image ||
+                'https://i.ytimg.com/vi/JWA5hJl4Dv0/default.jpg'
+              }
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              alt=""
+            />
+          </Box>
+          <Box sx={{ maxWidth: '14rem', alignSelf: 'center' }}>
+            <Typography className="line-clamp-1">
+              {player.currentTrack?.name}
+            </Typography>
+          </Box>
         </Box>
-        <Typography>{player.currentTrack?.name}</Typography>
-        <IconButton onClick={toggle}>
-          <Icon sx={{ color: theme.palette.primary.main }}>play_arrow</Icon>
+        <IconButton onClick={toggle} sx={{ mr: 1 }}>
+          {player.isPlaying ? (
+            <Icon sx={{ color: theme.palette.primary.main }}>pause_arrow</Icon>
+          ) : (
+            <Icon sx={{ color: theme.palette.primary.main }}>play_arrow</Icon>
+          )}
         </IconButton>
-        <button type="button" onClick={previousOne}>
+        {/* <button type="button" onClick={previousOne}>
           previus
         </button>
         <button type="button" onClick={nextOne}>
@@ -151,7 +166,7 @@ export default function Player(): JSX.Element {
         </button>
         <button type="button" onClick={skipTo(200)}>
           skip
-        </button>
+        </button> */}
       </Box>
     </Box>
   )

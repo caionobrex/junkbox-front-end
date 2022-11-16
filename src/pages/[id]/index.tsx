@@ -53,13 +53,6 @@ function PlaylistItemCard({
             color="text.secondary"
             component="div"
           >
-            Mac Miller
-          </Typography>
-          <Typography
-            variant="subtitle1"
-            color="text.secondary"
-            component="div"
-          >
             Adicionada por: {track.addedBy.name}
           </Typography>
         </CardContent>
@@ -174,7 +167,7 @@ const PlayList: NextPage = (): JSX.Element => {
         sx={{
           display: 'flex',
           mt: 8,
-          pb: 10,
+          pb: 16,
           flexDirection: 'column',
           rowGap: 1,
           maxWidth: '28rem',
@@ -201,7 +194,7 @@ const PlayList: NextPage = (): JSX.Element => {
         autoHideDuration={2000}
         onClose={() => setShowSnackbar(false)}
         message="Nova musica adicionada a playlist."
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       />
     </>
   )

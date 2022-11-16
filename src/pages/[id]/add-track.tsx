@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@mui/material'
 import { NextPage } from 'next'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import { NextRouter, useRouter } from 'next/router'
 import useSocket from '@/hooks/useSocket'
 import useUser from '@/hooks/dataHooks/useUser'
@@ -50,8 +50,14 @@ interface YoutubeItem {
   }
 }
 
-function ItemCard({ item, addTrackHandler }: { item: YoutubeItem }) {
-  const [user, loading] = useUser()
+function ItemCard({
+  item,
+  addTrackHandler,
+}: {
+  item: YoutubeItem
+  addTrackHandler: any
+}) {
+  // const [user, loading] = useUser()
 
   return (
     <Card
@@ -61,7 +67,7 @@ function ItemCard({ item, addTrackHandler }: { item: YoutubeItem }) {
       <CardMedia
         component="img"
         sx={{ width: 151 }}
-        image={item.snippet.thumbnails.high.url}
+        image={item.snippet.thumbnails.medium.url}
         alt="Live from space album cover"
       />
       <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
@@ -95,11 +101,11 @@ function ItemCard({ item, addTrackHandler }: { item: YoutubeItem }) {
 const Songs: NextPage = (): JSX.Element => {
   const [user, loading] = useUser()
   const [tracks] = useYoutubeVideos()
-  const [searchValue, setSearchValue] = useState([])
+  // const [searchValue, setSearchValue] = useState([])
   const { socket, connected } = useSocket()
   const router: NextRouter = useRouter()
 
-  const selectTrackHandler = useCallback(() => {}, [])
+  // const selectTrackHandler = useCallback(() => {}, [])
 
   const addTrackHandler = useCallback(
     (videoId: string) => () => {
@@ -137,9 +143,8 @@ const Songs: NextPage = (): JSX.Element => {
         }}
       >
         <Box border="1px" borderColor="black" borderRadius="999px">
-          <Box component="input" type="text" outline="none" border="none" />
+          {/* <Box component="input" type="text" outline="none" border="none" /> */}
         </Box>
-
         <Box display="flex" flexDirection="column" rowGap={1} mt={2}>
           {tracks &&
             tracks.items.map((item: YoutubeItem) => (

@@ -51,7 +51,7 @@ const NewPlayList: NextPage = (): JSX.Element => {
     return api
       .post('/playlists', {
         name: values.name,
-        maxLength: values.isPrivate ? values.maxSongs : null,
+        maxLength: values.limitSongs ? values.maxSongs : null,
         isPrivate: values.isPrivate,
         password: values.password,
         description: 'Testing',

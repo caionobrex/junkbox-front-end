@@ -17,7 +17,7 @@ import Router from 'next/router'
 import { useCallback } from 'react'
 import usePlaylists from '@/hooks/dataHooks/usePlaylists'
 
-function PlaylistCard({ playlist }) {
+function PlaylistCard({ playlist }: any) {
   return (
     <Card
       sx={{ display: 'flex' }}
@@ -103,7 +103,9 @@ const Home: NextPage = () => {
       >
         {!loading &&
           !error &&
-          playlists.map((playlist) => <PlaylistCard playlist={playlist} />)}
+          playlists.map((playlist: any) => (
+            <PlaylistCard playlist={playlist} />
+          ))}
       </Box>
       <Fab
         color="primary"
