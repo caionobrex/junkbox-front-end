@@ -5,11 +5,12 @@ import {
   Card,
   CardContent,
   CardMedia,
+  CircularProgress,
   Toolbar,
   Typography,
 } from '@mui/material'
 import { NextPage } from 'next'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { NextRouter, useRouter } from 'next/router'
 import useSocket from '@/hooks/useSocket'
 import useUser from '@/hooks/dataHooks/useUser'
@@ -100,8 +101,8 @@ function ItemCard({
 
 const Songs: NextPage = (): JSX.Element => {
   const [user, loading] = useUser()
-  const [tracks] = useYoutubeVideos()
-  // const [searchValue, setSearchValue] = useState([])
+  const [searchValue, setSearchValue] = useState<string>('')
+  const [tracks, loadingTracks, error] = useYoutubeVideos('essa novinha tem only fans')
   const { socket, connected } = useSocket()
   const router: NextRouter = useRouter()
 
@@ -109,7 +110,7 @@ const Songs: NextPage = (): JSX.Element => {
 
   const addTrackHandler = useCallback(
     (videoId: string) => () => {
-      if (socket && connected) {
+      if (socket) {
         socket?.emit('addTrack', {
           playlistId: router.query.id,
           externalId: videoId,
@@ -122,7 +123,7 @@ const Songs: NextPage = (): JSX.Element => {
   useEffect(() => {}, [])
 
   useEffect(() => {
-    if (!loading && !user) router.replace('/login')
+    // if (!loading && !user) router.replace('/login')
   }, [user, loading])
 
   return (
@@ -145,12 +146,19 @@ const Songs: NextPage = (): JSX.Element => {
         <Box border="1px" borderColor="black" borderRadius="999px">
           {/* <Box component="input" type="text" outline="none" border="none" /> */}
         </Box>
-        <Box display="flex" flexDirection="column" rowGap={1} mt={2}>
-          {tracks &&
-            tracks.items.map((item: YoutubeItem) => (
-              <ItemCard item={item} addTrackHandler={addTrackHandler} />
-            ))}
-        </Box>
+        {loadingTracks ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', pt: 5 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Box display="flex" flexDirection="column" rowGap={1} mt={2}>
+            {tracks &&
+              !error &&
+              tracks.items.map((item: YoutubeItem) => (
+                <ItemCard item={item} addTrackHandler={addTrackHandler} />
+              ))}
+          </Box>
+        )}
       </Box>
     </>
   )

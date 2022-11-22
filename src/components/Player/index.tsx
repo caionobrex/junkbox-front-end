@@ -2,6 +2,7 @@ import { Box, Icon, IconButton, Typography, useTheme } from '@mui/material'
 import { createRef, useCallback, useEffect, useState } from 'react'
 import ReactPlayer from 'react-player'
 import create from 'zustand'
+import useSocket from '@/hooks/useSocket'
 
 interface Track {
   id: number
@@ -20,22 +21,40 @@ interface Track {
 interface PlayerState {
   currentTrack: Track | null
   currentTime: number
+  playlistId: number | null
   playlist: Track[]
   isPlaying: boolean
+  setPlaylistId: (playlistId: number) => void
   setCurrentTrack: (currentTrack: Track) => void
   setPlaylist: (playlist: Track[]) => void
   setCurrentTime: (currentTime: number) => void
+  deleteTrack: (trackId: number) => void
   play: () => void
   pause: () => void
   toggle: () => void
+  addTrack: (track: Track) => void
 }
 
 export const usePlayerStore = create<PlayerState>((set) => ({
   currentTrack: null,
   currentTime: 0,
   isPlaying: false,
+  playlistId: null,
   playlist: [],
+  setPlaylistId: (playlistId: number) => set(() => ({ playlistId })),
   setCurrentTrack: (currentTrack: Track) => set(() => ({ currentTrack })),
+  addTrack: (track: Track) =>
+    set(({ playlist }) => ({
+      playlist: [...playlist, track].sort((a, b) =>
+        a.upvoteCount > b.upvoteCount ? -1 : 1
+      ),
+    })),
+  deleteTrack: (trackId: number) =>
+    set(({ playlist }) => ({
+      playlist: playlist
+        .filter((track) => track.id !== trackId)
+        .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1)),
+    })),
   play: () => set(() => ({ isPlaying: true })),
   pause: () => set(() => ({ isPlaying: false })),
   toggle: () => set((state) => ({ isPlaying: !state.isPlaying })),
@@ -46,6 +65,7 @@ export const usePlayerStore = create<PlayerState>((set) => ({
 
 export default function Player(): JSX.Element {
   const [hasWindow, setHasWindow] = useState<boolean>(false)
+  const { socket, connected } = useSocket()
   const player = usePlayerStore()
   const theme = useTheme()
   const ref = createRef<ReactPlayer>()
@@ -55,13 +75,14 @@ export default function Player(): JSX.Element {
     else player.play()
   }, [player])
 
-  // const skipTo = useCallback(
-  //   (valueInSeconds: number) => () => {
-  //     if (!ref.current) return
-  //     ref.current.seekTo(valueInSeconds)
-  //   },
-  //   [ref]
-  // )
+  const skipTo = useCallback(
+    (valueInSeconds: number) => () => {
+      if (!ref.current) return
+      if (player.currentTrack)
+        ref.current.seekTo(player.currentTrack.duration - 4)
+    },
+    [ref, player]
+  )
 
   // const previousOne = useCallback(() => {
   //   if (!player.currentTrack) return
@@ -78,15 +99,29 @@ export default function Player(): JSX.Element {
   const handleOnEnd = useCallback(() => {
     if (!player.currentTrack) return
     if (player.currentTrack.position === player.playlist.length - 1) return
+    if (connected && socket) {
+      socket?.emit('deleteTrack', {
+        playlistId: player.playlistId,
+        trackId: player.currentTrack.id,
+      })
+    }
     player.setCurrentTrack(player.playlist[player.currentTrack.position + 1])
     // TODO - EMMIT EVENT TO REMOVE SONG FROM PLAYLIST
-  }, [player])
+  }, [player, socket, connected])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setHasWindow(true)
     }
   }, [])
+
+  useEffect(() => {
+    if (!socket) return
+    socket.on('addTrack', player.addTrack)
+    socket.on('deleteTrack', (_playlistId: number, trackId: number) =>
+      player.deleteTrack(trackId)
+    )
+  }, [socket, connected])
 
   return (
     <Box
@@ -167,6 +202,9 @@ export default function Player(): JSX.Element {
         <button type="button" onClick={skipTo(200)}>
           skip
         </button> */}
+        <button type="button" onClick={skipTo(10)}>
+          dsa
+        </button>
       </Box>
     </Box>
   )

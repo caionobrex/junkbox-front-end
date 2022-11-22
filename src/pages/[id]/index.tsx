@@ -53,7 +53,7 @@ function PlaylistItemCard({
             color="text.secondary"
             component="div"
           >
-            Adicionada por: {track.addedBy.name}
+            Adicionada por: {track.addedBy?.name}
           </Typography>
         </CardContent>
         <Box
@@ -90,7 +90,7 @@ function PlaylistItemCard({
 }
 
 const PlayList: NextPage = (): JSX.Element => {
-  const [, setPlaylist] = useState<any>(null)
+  const [playlist, setPlaylist] = useState<any>(null)
   const [tracks, setTracks] = useState<any[]>([])
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false)
   const { socket, connected } = useSocket()
@@ -102,16 +102,25 @@ const PlayList: NextPage = (): JSX.Element => {
   }
 
   useEffect(() => {
-    if (!socket || !connected || !router.isReady) return
+    if (!socket || !router.isReady) return
     socket?.emit('joinPlaylist', { playlistId: router.query.id })
     socket?.on('addTrack', (track: any) => {
       setTracks((current: Track[]) => [...current, track])
       setShowSnackbar(true)
     })
-    socket?.on('removeTrack', () => {})
+    socket?.on('deleteTrack', (_playlistId: number, trackId: number) => {
+      setTracks((current) =>
+        current
+          .filter((track) => track.id !== trackId)
+          .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1))
+      )
+    })
     socket?.on('upVoteTrack', (trackId: number, upVoteCount: number) => {
       setTracks((current: Track[]) => {
         current = current
+          .filter((track) =>
+            !player.currentTrack ? true : player.currentTrack.id !== track.id
+          )
           .map((track: Track) => {
             if (track.id === trackId) {
               track.upvoteCount = upVoteCount
@@ -134,10 +143,14 @@ const PlayList: NextPage = (): JSX.Element => {
       api
         .get(`/playlists/${router.query.id}/tracks`)
         .then((res: AxiosResponse) => {
-          setTracks(res.data)
+          setTracks(
+            res.data.filter((track) =>
+              !player.currentTrack ? true : player.currentTrack.id !== track.id
+            )
+          )
         }),
     ])
-  }, [router])
+  }, [router, player])
 
   return (
     <>
@@ -149,6 +162,7 @@ const PlayList: NextPage = (): JSX.Element => {
           {true && (
             <IconButton
               onClick={() => {
+                player.setPlaylistId(playlist.id)
                 player.setPlaylist(tracks)
                 player.setCurrentTrack({ ...tracks[0], position: 0 })
                 player.toggle()
@@ -174,6 +188,13 @@ const PlayList: NextPage = (): JSX.Element => {
           marginInline: 'auto',
         }}
       >
+        {player.currentTrack &&
+          playlist && player.currentTrack.playlistId === playlist.id && (
+            <PlaylistItemCard
+              track={{ ...tracks[0], name: 'Fixed', position: 1 }}
+              onUpVote={() => alert('test')}
+            />
+          )}
         {tracks.map((track: Track, index: number) => (
           <PlaylistItemCard
             track={{ ...track, position: index + 1 }}
