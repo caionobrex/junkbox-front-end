@@ -30,6 +30,7 @@ interface Track {
   position: number
   anonymous: boolean
   duration: number
+  playlistId: number
 }
 
 function PlaylistItemCard({
@@ -144,7 +145,7 @@ const PlayList: NextPage = (): JSX.Element => {
         .get(`/playlists/${router.query.id}/tracks`)
         .then((res: AxiosResponse) => {
           setTracks(
-            res.data.filter((track) =>
+            res.data.filter((track: Track) =>
               !player.currentTrack ? true : player.currentTrack.id !== track.id
             )
           )
@@ -189,7 +190,8 @@ const PlayList: NextPage = (): JSX.Element => {
         }}
       >
         {player.currentTrack &&
-          playlist && player.currentTrack.playlistId === playlist.id && (
+          playlist &&
+          player.currentTrack.playlistId === playlist.id && (
             <PlaylistItemCard
               track={{ ...tracks[0], name: 'Fixed', position: 1 }}
               onUpVote={() => alert('test')}

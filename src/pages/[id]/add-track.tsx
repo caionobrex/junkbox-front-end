@@ -10,7 +10,7 @@ import {
   Typography,
 } from '@mui/material'
 import { NextPage } from 'next'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import { NextRouter, useRouter } from 'next/router'
 import useSocket from '@/hooks/useSocket'
 import useUser from '@/hooks/dataHooks/useUser'
@@ -101,8 +101,8 @@ function ItemCard({
 
 const Songs: NextPage = (): JSX.Element => {
   const [user, loading] = useUser()
-  const [searchValue, setSearchValue] = useState<string>('')
-  const [tracks, loadingTracks, error] = useYoutubeVideos('essa novinha tem only fans')
+  // const [searchValue, setSearchValue] = useState<string>('')
+  const [tracks, loadingTracks, error] = useYoutubeVideos('')
   const { socket, connected } = useSocket()
   const router: NextRouter = useRouter()
 

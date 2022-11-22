@@ -16,6 +16,7 @@ interface Track {
   position: number
   anonymous: boolean
   duration: number
+  playlistId: number
 }
 
 interface PlayerState {
@@ -76,7 +77,7 @@ export default function Player(): JSX.Element {
   }, [player])
 
   const skipTo = useCallback(
-    (valueInSeconds: number) => () => {
+    () => () => {
       if (!ref.current) return
       if (player.currentTrack)
         ref.current.seekTo(player.currentTrack.duration - 4)
@@ -202,7 +203,7 @@ export default function Player(): JSX.Element {
         <button type="button" onClick={skipTo(200)}>
           skip
         </button> */}
-        <button type="button" onClick={skipTo(10)}>
+        <button type="button" onClick={skipTo()}>
           dsa
         </button>
       </Box>
