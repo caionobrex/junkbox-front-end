@@ -62,18 +62,26 @@ function ItemCard({
 
   return (
     <Card
-      sx={{ display: 'flex' }}
+      sx={{ display: 'flex', minHeight: '7rem' }}
       // onClick={() => Router.push(`/${playlist.id}`)}
     >
-      <CardMedia
-        component="img"
-        sx={{ width: 151 }}
-        image={item.snippet.thumbnails.medium.url}
-        alt="Live from space album cover"
-      />
+      <Box sx={{ width: 200 }}>
+        <CardMedia
+          component="img"
+          sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          image={item.snippet.thumbnails.medium.url}
+          alt="Live from space album cover"
+        />
+      </Box>
       <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
         <CardContent sx={{ flex: '1 0 auto' }}>
-          <Typography component="div" variant="h6">
+          <Typography
+            component="div"
+            variant="h6"
+            sx={{ fontSize: 14 }}
+            className="line-clamp-2"
+            title={item.snippet.title}
+          >
             {item.snippet.title}
           </Typography>
         </CardContent>
@@ -102,8 +110,8 @@ function ItemCard({
 const Songs: NextPage = (): JSX.Element => {
   const [user, loading] = useUser()
   // const [searchValue, setSearchValue] = useState<string>('')
-  const [tracks, loadingTracks, error] = useYoutubeVideos('')
-  const { socket, connected } = useSocket()
+  const [tracks, loadingTracks, error] = useYoutubeVideos('capitao de areia')
+  const { socket } = useSocket()
   const router: NextRouter = useRouter()
 
   // const selectTrackHandler = useCallback(() => {}, [])
@@ -117,7 +125,7 @@ const Songs: NextPage = (): JSX.Element => {
         })
       }
     },
-    [socket, connected, router]
+    [socket, router]
   )
 
   useEffect(() => {}, [])
