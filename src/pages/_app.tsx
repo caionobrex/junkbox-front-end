@@ -3,7 +3,7 @@ import 'normalize.css'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import { createTheme, ThemeProvider } from '@mui/material'
-import Player from '@/components/Player'
+import Player, { usePlayerStore } from '@/components/Player'
 import useUser from '@/hooks/dataHooks/useUser'
 
 const theme = createTheme({
@@ -15,6 +15,7 @@ const theme = createTheme({
 })
 
 function MyApp({ Component, pageProps, router }: AppProps) {
+  const { currentTrack } = usePlayerStore()
   const [user, loading, error] = useUser()
 
   return (
@@ -31,7 +32,7 @@ function MyApp({ Component, pageProps, router }: AppProps) {
         <link rel="manifest" href="/manifest.json" />
       </Head>
       <Component {...pageProps} key={router.route} />
-      {!loading && user && !error && <Player />}
+      {!loading && user && !error && currentTrack && <Player />}
     </ThemeProvider>
   )
 }

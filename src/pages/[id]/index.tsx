@@ -1,3 +1,5 @@
+/* eslint-disable consistent-return */
+/* eslint-disable no-nested-ternary */
 import {
   AppBar,
   Box,
@@ -13,11 +15,12 @@ import {
 } from '@mui/material'
 import { NextPage } from 'next'
 import Router, { NextRouter, useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { AxiosResponse } from 'axios'
 import useSocket from '@/hooks/useSocket'
 import api from '@/services/api'
 import { usePlayerStore } from '@/components/Player'
+import useUser from '@/hooks/dataHooks/useUser'
 
 interface Track {
   id: number
@@ -94,7 +97,8 @@ const PlayList: NextPage = (): JSX.Element => {
   const [playlist, setPlaylist] = useState<any>(null)
   const [tracks, setTracks] = useState<any[]>([])
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false)
-  const { socket, connected } = useSocket()
+  const { socket } = useSocket()
+  const [user] = useUser()
   const router: NextRouter = useRouter()
   const player = usePlayerStore()
 
@@ -102,38 +106,46 @@ const PlayList: NextPage = (): JSX.Element => {
     socket?.emit('upVoteTrack', { playlistId: router.query.id, trackId })
   }
 
+  const onUpVote = useCallback((trackId: number, upVoteCount: number) => {
+    setTracks((current: Track[]) => {
+      current = current
+        .map((track: Track) => {
+          if (track.id === trackId) {
+            track.upvoteCount = upVoteCount
+          }
+          return track
+        })
+        .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1))
+      player.setPlaylist(current)
+      return current
+    })
+  }, [])
+
+  const addTrackHandler = useCallback((track: any) => {
+    setTracks((current: Track[]) => [...current, track])
+    setShowSnackbar(true)
+  }, [])
+
+  const deleteTrack = useCallback((_playlistId: number, trackId: number) => {
+    setTracks((current) =>
+      current
+        .filter((track) => track.id !== trackId)
+        .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1))
+    )
+  }, [])
+
   useEffect(() => {
     if (!socket || !router.isReady) return
     socket?.emit('joinPlaylist', { playlistId: router.query.id })
-    socket?.on('addTrack', (track: any) => {
-      setTracks((current: Track[]) => [...current, track])
-      setShowSnackbar(true)
-    })
-    socket?.on('deleteTrack', (_playlistId: number, trackId: number) => {
-      setTracks((current) =>
-        current
-          .filter((track) => track.id !== trackId)
-          .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1))
-      )
-    })
-    socket?.on('upVoteTrack', (trackId: number, upVoteCount: number) => {
-      setTracks((current: Track[]) => {
-        current = current
-          .filter((track) =>
-            !player.currentTrack ? true : player.currentTrack.id !== track.id
-          )
-          .map((track: Track) => {
-            if (track.id === trackId) {
-              track.upvoteCount = upVoteCount
-            }
-            return track
-          })
-          .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1))
-        player.setPlaylist(current)
-        return current
-      })
-    })
-  }, [socket, connected, router, player])
+    socket?.on('addTrack', addTrackHandler)
+    socket?.on('deleteTrack', deleteTrack)
+    socket?.on('upVoteTrack', onUpVote)
+    return () => {
+      socket.off('upVoteTrack', onUpVote)
+      socket.off('addTrack', addTrackHandler)
+      socket.off('deleteTrack', deleteTrack)
+    }
+  }, [socket, router])
 
   useEffect(() => {
     if (!router.isReady) return
@@ -144,11 +156,7 @@ const PlayList: NextPage = (): JSX.Element => {
       api
         .get(`/playlists/${router.query.id}/tracks`)
         .then((res: AxiosResponse) => {
-          setTracks(
-            res.data.filter((track: Track) =>
-              !player.currentTrack ? true : player.currentTrack.id !== track.id
-            )
-          )
+          setTracks(res.data)
         }),
     ])
   }, [router, player])
@@ -160,7 +168,7 @@ const PlayList: NextPage = (): JSX.Element => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Playlist
           </Typography>
-          {true && (
+          {playlist && playlist.userId === user.id && (
             <IconButton
               onClick={() => {
                 player.setPlaylistId(playlist.id)
@@ -182,6 +190,7 @@ const PlayList: NextPage = (): JSX.Element => {
         sx={{
           display: 'flex',
           mt: 8,
+          pt: { lg: 2 },
           pb: 16,
           flexDirection: 'column',
           rowGap: 1,
@@ -189,20 +198,28 @@ const PlayList: NextPage = (): JSX.Element => {
           marginInline: 'auto',
         }}
       >
-        {player.currentTrack &&
+        {/* {player.currentTrack &&
           playlist &&
           player.currentTrack.playlistId === playlist.id && (
             <PlaylistItemCard
               track={{ ...tracks[0], name: 'Fixed', position: 1 }}
               onUpVote={() => alert('test')}
             />
-          )}
-        {tracks.map((track: Track, index: number) => (
-          <PlaylistItemCard
-            track={{ ...track, position: index + 1 }}
-            onUpVote={handleUpVote}
-          />
-        ))}
+          )} */}
+        {tracks
+          .filter((track: Track) =>
+            tracks.length === 1
+              ? true
+              : player.currentTrack
+              ? track.id !== player.currentTrack.id
+              : true
+          )
+          .map((track: Track, index: number) => (
+            <PlaylistItemCard
+              track={{ ...track, position: index + 1 }}
+              onUpVote={handleUpVote}
+            />
+          ))}
       </Box>
       <Fab
         color="primary"

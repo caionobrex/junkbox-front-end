@@ -96,6 +96,7 @@ const Home: NextPage = () => {
           mt: 8,
           flexDirection: 'column',
           rowGap: 1,
+          pt: { lg: 2 },
           pb: 10,
           maxWidth: '28rem',
           marginInline: 'auto',

@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 import { Box, Icon, IconButton, Typography, useTheme } from '@mui/material'
 import { createRef, useCallback, useEffect, useState } from 'react'
 import ReactPlayer from 'react-player'
@@ -66,7 +67,7 @@ export const usePlayerStore = create<PlayerState>((set) => ({
 
 export default function Player(): JSX.Element {
   const [hasWindow, setHasWindow] = useState<boolean>(false)
-  const { socket, connected } = useSocket()
+  const { socket } = useSocket()
   const player = usePlayerStore()
   const theme = useTheme()
   const ref = createRef<ReactPlayer>()
@@ -100,15 +101,23 @@ export default function Player(): JSX.Element {
   const handleOnEnd = useCallback(() => {
     if (!player.currentTrack) return
     if (player.currentTrack.position === player.playlist.length - 1) return
-    if (connected && socket) {
+    if (socket) {
       socket?.emit('deleteTrack', {
         playlistId: player.playlistId,
         trackId: player.currentTrack.id,
       })
     }
     player.setCurrentTrack(player.playlist[player.currentTrack.position + 1])
-    // TODO - EMMIT EVENT TO REMOVE SONG FROM PLAYLIST
-  }, [player, socket, connected])
+  }, [player, socket])
+
+  const onDeleteTrack = useCallback(
+    (_playlistId: number, trackId: number) => player.deleteTrack(trackId),
+    []
+  )
+
+  const onAddTrack = useCallback((track: Track) => {
+    player.addTrack(track)
+  }, [])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -118,11 +127,13 @@ export default function Player(): JSX.Element {
 
   useEffect(() => {
     if (!socket) return
-    socket.on('addTrack', player.addTrack)
-    socket.on('deleteTrack', (_playlistId: number, trackId: number) =>
-      player.deleteTrack(trackId)
-    )
-  }, [socket, connected])
+    socket.on('addTrack', onAddTrack)
+    socket.on('deleteTrack', onDeleteTrack)
+    return () => {
+      socket.off('addTrack', onAddTrack)
+      socket.off('deleteTrack', onDeleteTrack)
+    }
+  }, [socket])
 
   return (
     <Box
