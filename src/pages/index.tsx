@@ -4,6 +4,7 @@ import {
   Card,
   CardContent,
   CardMedia,
+  CircularProgress,
   Fab,
   IconButton,
   Toolbar,
@@ -102,11 +103,17 @@ const Home: NextPage = () => {
           marginInline: 'auto',
         }}
       >
-        {!loading &&
-          !error &&
-          playlists.map((playlist: any) => (
-            <PlaylistCard playlist={playlist} />
-          ))}
+        {loading || error ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', pt: 5 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            {playlists.map((playlist: any) => (
+              <PlaylistCard playlist={playlist} />
+            ))}
+          </>
+        )}
       </Box>
       <Fab
         color="primary"
