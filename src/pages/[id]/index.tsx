@@ -159,7 +159,7 @@ const PlayList: NextPage = (): JSX.Element => {
           setTracks(res.data)
         }),
     ])
-  }, [router, player])
+  }, [router])
 
   return (
     <>
