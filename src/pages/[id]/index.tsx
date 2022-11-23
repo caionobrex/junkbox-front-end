@@ -5,6 +5,7 @@ import {
   Box,
   Card,
   CardContent,
+  CircularProgress,
   Fab,
   Icon,
   IconButton,
@@ -16,11 +17,12 @@ import {
 import { NextPage } from 'next'
 import Router, { NextRouter, useRouter } from 'next/router'
 import { useCallback, useEffect, useState } from 'react'
-import { AxiosResponse } from 'axios'
+import { useSWRConfig } from 'swr'
 import useSocket from '@/hooks/useSocket'
-import api from '@/services/api'
 import { usePlayerStore } from '@/components/Player'
 import useUser from '@/hooks/dataHooks/useUser'
+import usePlaylistTracks from '@/hooks/dataHooks/usePlaylistTracks'
+import usePlaylistById from '@/hooks/dataHooks/usePlaylistById'
 
 interface Track {
   id: number
@@ -94,45 +96,72 @@ function PlaylistItemCard({
 }
 
 const PlayList: NextPage = (): JSX.Element => {
-  const [playlist, setPlaylist] = useState<any>(null)
-  const [tracks, setTracks] = useState<any[]>([])
+  const router: NextRouter = useRouter()
+  const [playlist] = usePlaylistById(
+    typeof router.query.id === 'string' ? router.query.id : ''
+  )
+  const [tracks, loading, error] = usePlaylistTracks(
+    typeof router.query.id === 'string' ? router.query.id : ''
+  )
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false)
   const { socket } = useSocket()
   const [user] = useUser()
-  const router: NextRouter = useRouter()
   const player = usePlayerStore()
+  const { mutate } = useSWRConfig()
 
   const handleUpVote = (trackId: number) => {
     socket?.emit('upVoteTrack', { playlistId: router.query.id, trackId })
   }
 
-  const onUpVote = useCallback((trackId: number, upVoteCount: number) => {
-    setTracks((current: Track[]) => {
-      current = current
-        .map((track: Track) => {
-          if (track.id === trackId) {
-            track.upvoteCount = upVoteCount
-          }
-          return track
-        })
-        .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1))
-      player.setPlaylist(current)
-      return current
-    })
-  }, [])
+  const onUpVote = useCallback(
+    (trackId: number, upVoteCount: number) => {
+      mutate(
+        `/playlists/${router.query.id}/tracks`,
+        (current: Track[]) => {
+          current = current
+            .map((track: Track) => {
+              if (track.id === trackId) {
+                track.upvoteCount = upVoteCount
+              }
+              return track
+            })
+            .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1))
+          player.setPlaylist(current)
+          return current
+        },
+        { revalidate: false }
+      )
+    },
+    [router, mutate]
+  )
 
-  const addTrackHandler = useCallback((track: any) => {
-    setTracks((current: Track[]) => [...current, track])
-    setShowSnackbar(true)
-  }, [])
+  const addTrackHandler = useCallback(
+    (track: any) => {
+      mutate(
+        `/playlists/${router.query.id}/tracks`,
+        (current: Track[]) => [...current, track],
+        { revalidate: false }
+      )
+      setShowSnackbar(true)
+    },
+    [router, mutate]
+  )
 
-  const deleteTrack = useCallback((_playlistId: number, trackId: number) => {
-    setTracks((current) =>
-      current
-        .filter((track) => track.id !== trackId)
-        .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1))
-    )
-  }, [])
+  const deleteTrack = useCallback(
+    (_playlistId: number, trackId: number) => {
+      mutate(
+        `/playlists/${router.query.id}/tracks`,
+        (current: Track[]) =>
+          current
+            .filter((track: Track) => track.id !== trackId)
+            .sort((a: Track, b: Track) =>
+              a.upvoteCount > b.upvoteCount ? -1 : 1
+            ),
+        { revalidate: false }
+      )
+    },
+    [router, mutate]
+  )
 
   useEffect(() => {
     if (!socket || !router.isReady) return
@@ -147,20 +176,6 @@ const PlayList: NextPage = (): JSX.Element => {
     }
   }, [socket, router])
 
-  useEffect(() => {
-    if (!router.isReady) return
-    Promise.all([
-      api.get(`/playlists/${router.query.id}`).then((res: AxiosResponse) => {
-        setPlaylist(res.data)
-      }),
-      api
-        .get(`/playlists/${router.query.id}/tracks`)
-        .then((res: AxiosResponse) => {
-          setTracks(res.data)
-        }),
-    ])
-  }, [router])
-
   return (
     <>
       <AppBar position="fixed">
@@ -168,7 +183,7 @@ const PlayList: NextPage = (): JSX.Element => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Playlist
           </Typography>
-          {playlist && playlist.userId === user.id && (
+          {!loading && playlist && playlist.userId === user.id && (
             <IconButton
               onClick={() => {
                 player.setPlaylistId(playlist.id)
@@ -198,28 +213,28 @@ const PlayList: NextPage = (): JSX.Element => {
           marginInline: 'auto',
         }}
       >
-        {/* {player.currentTrack &&
-          playlist &&
-          player.currentTrack.playlistId === playlist.id && (
-            <PlaylistItemCard
-              track={{ ...tracks[0], name: 'Fixed', position: 1 }}
-              onUpVote={() => alert('test')}
-            />
-          )} */}
-        {tracks
-          .filter((track: Track) =>
-            tracks.length === 1
-              ? true
-              : player.currentTrack
-              ? track.id !== player.currentTrack.id
-              : true
-          )
-          .map((track: Track, index: number) => (
-            <PlaylistItemCard
-              track={{ ...track, position: index + 1 }}
-              onUpVote={handleUpVote}
-            />
-          ))}
+        {loading || error ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', pt: 5 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            {tracks
+              .filter((track: Track) =>
+                tracks.length === 1
+                  ? true
+                  : player.currentTrack
+                  ? track.id !== player.currentTrack.id
+                  : true
+              )
+              .map((track: Track, index: number) => (
+                <PlaylistItemCard
+                  track={{ ...track, position: index + 1 }}
+                  onUpVote={handleUpVote}
+                />
+              ))}
+          </>
+        )}
       </Box>
       <Fab
         color="primary"
