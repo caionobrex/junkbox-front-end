@@ -177,10 +177,15 @@ const Songs: NextPage = (): JSX.Element => {
         }}
       >
         <Box border="1px" borderColor="black" borderRadius="999px">
-          <input
-            type="text"
-            onChange={(event) => setSearchValue(event.target.value)}
-          />
+          <form
+            action=""
+            onSubmit={(event: any) => {
+              event.preventDefault()
+              setSearchValue(event.target.search.value)
+            }}
+          >
+            <input type="text" id="search" name="search" />
+          </form>
         </Box>
         {loadingTracks ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', pt: 5 }}>
