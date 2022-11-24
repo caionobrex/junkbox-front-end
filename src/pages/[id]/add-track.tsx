@@ -7,12 +7,14 @@ import {
   CardMedia,
   CircularProgress,
   Snackbar,
+  TextField,
   Toolbar,
   Typography,
 } from '@mui/material'
 import { NextPage } from 'next'
 import { useCallback, useEffect, useState } from 'react'
 import { NextRouter, useRouter } from 'next/router'
+import SearchIcon from '@mui/icons-material/Search'
 import useSocket from '@/hooks/useSocket'
 import useUser from '@/hooks/dataHooks/useUser'
 import useYoutubeVideos from '@/hooks/dataHooks/useYoutubeVideos'
@@ -95,7 +97,7 @@ function ItemCard({
             pb: 1,
           }}
         >
-          <Typography>Audio</Typography>
+          <Typography />
           <Button
             type="button"
             onClick={addTrackHandler(item.id?.videoId || item.id)}
@@ -173,7 +175,8 @@ const Songs: NextPage = (): JSX.Element => {
         sx={{
           maxWidth: '28rem',
           marginInline: 'auto',
-          pb: 12,
+          pb: 1,
+          pt: 2,
         }}
       >
         <Box border="1px" borderColor="black" borderRadius="999px">
@@ -184,7 +187,28 @@ const Songs: NextPage = (): JSX.Element => {
               setSearchValue(event.target.search.value)
             }}
           >
-            <input type="text" id="search" name="search" />
+            <Box sx={{ display: 'flex' }}>
+              <TextField
+                id="outlined-basic"
+                label="Pesquisar música"
+                variant="outlined"
+                name="search"
+                sx={{ width: '100%' }}
+              />
+              <Box
+                component="button"
+                type="submit"
+                sx={{
+                  outline: 'none',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  width: '20%',
+                }}
+              >
+                <SearchIcon />
+              </Box>
+            </Box>
           </form>
         </Box>
         {loadingTracks ? (
@@ -196,7 +220,11 @@ const Songs: NextPage = (): JSX.Element => {
             {tracks &&
               !error &&
               tracks.items.map((item: YoutubeItem) => (
-                <ItemCard item={item} addTrackHandler={addTrackHandler} />
+                <ItemCard
+                  item={item}
+                  addTrackHandler={addTrackHandler}
+                  key={item.id.videoId}
+                />
               ))}
           </Box>
         )}

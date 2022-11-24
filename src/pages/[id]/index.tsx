@@ -5,6 +5,7 @@ import {
   Box,
   Card,
   CardContent,
+  CardMedia,
   CircularProgress,
   Fab,
   Icon,
@@ -28,6 +29,7 @@ interface Track {
   id: number
   name: string
   externalId: string
+  image: string
   upvoteCount: number
   addedBy: {
     name: string
@@ -48,10 +50,23 @@ function PlaylistItemCard({
   const theme = useTheme()
 
   return (
-    <Card sx={{ display: 'flex', flexDirection: 'row-reverse' }}>
+    <Card sx={{ display: 'flex' }}>
+      <Box sx={{ width: 151 }}>
+        <CardMedia
+          component="img"
+          sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          image={track.image}
+          alt="Live from space album cover"
+        />
+      </Box>
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <CardContent sx={{ flex: '1 0 auto' }}>
-          <Typography component="div" variant="h6">
+        <CardContent sx={{ flex: '1 0 auto', margin: 0 }}>
+          <Typography
+            component="div"
+            variant="h6"
+            className="line-clamp-2"
+            sx={{ fontSize: 14 }}
+          >
             {track.name}
           </Typography>
           <Typography
@@ -196,6 +211,10 @@ const PlayList: NextPage = (): JSX.Element => {
                 player.setPlaylistId(playlist.id)
                 player.setPlaylist(tracks)
                 player.setCurrentTrack({ ...tracks[0], position: 0 })
+                socket?.emit('playTrack', {
+                  trackId: tracks[0].id,
+                  trackPosition: 1,
+                })
                 player.toggle()
               }}
             >
@@ -236,6 +255,7 @@ const PlayList: NextPage = (): JSX.Element => {
               )
               .map((track: Track, index: number) => (
                 <PlaylistItemCard
+                  key={track.id}
                   track={{ ...track, position: index + 1 }}
                   onUpVote={handleUpVote}
                 />

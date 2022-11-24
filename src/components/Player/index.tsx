@@ -4,6 +4,7 @@ import { createRef, useCallback, useEffect, useState } from 'react'
 import ReactPlayer from 'react-player'
 import create from 'zustand'
 import useSocket from '@/hooks/useSocket'
+import useUser from '@/hooks/dataHooks/useUser'
 
 interface Track {
   id: number
@@ -71,6 +72,7 @@ export default function Player(): JSX.Element {
   const player = usePlayerStore()
   const theme = useTheme()
   const ref = createRef<ReactPlayer>()
+  const [user] = useUser()
 
   const toggle = useCallback(() => {
     if (player.isPlaying) player.pause()
@@ -101,13 +103,18 @@ export default function Player(): JSX.Element {
   const handleOnEnd = useCallback(() => {
     if (!player.currentTrack) return
     if (player.currentTrack.position === player.playlist.length - 1) return
+    const nextTrack = player.playlist[player.currentTrack.position + 1]
     if (socket) {
-      socket?.emit('deleteTrack', {
-        playlistId: player.playlistId,
-        trackId: player.currentTrack.id,
+      // socket?.emit('deleteTrack', {
+      //   playlistId: player.playlistId,
+      //   trackId: player.currentTrack.id,
+      // })
+      socket?.emit('playTrack', {
+        trackId: nextTrack.id,
+        trackPosition: nextTrack.position,
       })
     }
-    player.setCurrentTrack(player.playlist[player.currentTrack.position + 1])
+    player.setCurrentTrack(nextTrack)
   }, [player, socket])
 
   const onDeleteTrack = useCallback(
@@ -119,6 +126,16 @@ export default function Player(): JSX.Element {
     player.addTrack(track)
   }, [])
 
+  const playTrackHandler = useCallback(
+    (track: Track, trackPosition: number) => {
+      console.log(track.id)
+      console.log(trackPosition)
+      // if (user.id === player.playlistId) return
+      // player.setCurrentTrack({ ...track, position: trackPosition })
+    },
+    [user, player.playlistId]
+  )
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setHasWindow(true)
@@ -129,9 +146,11 @@ export default function Player(): JSX.Element {
     if (!socket) return
     socket.on('addTrack', onAddTrack)
     socket.on('deleteTrack', onDeleteTrack)
+    socket?.on('playTrack', playTrackHandler)
     return () => {
       socket.off('addTrack', onAddTrack)
       socket.off('deleteTrack', onDeleteTrack)
+      socket?.off('playTrack', playTrackHandler)
     }
   }, [socket])
 
