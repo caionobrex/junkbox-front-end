@@ -6,11 +6,12 @@ import {
   CardContent,
   CardMedia,
   CircularProgress,
+  Snackbar,
   Toolbar,
   Typography,
 } from '@mui/material'
 import { NextPage } from 'next'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { NextRouter, useRouter } from 'next/router'
 import useSocket from '@/hooks/useSocket'
 import useUser from '@/hooks/dataHooks/useUser'
@@ -109,8 +110,10 @@ function ItemCard({
 
 const Songs: NextPage = (): JSX.Element => {
   const [user, loading] = useUser()
-  // const [searchValue, setSearchValue] = useState<string>('')
-  const [tracks, loadingTracks, error] = useYoutubeVideos('capitao de areia')
+  const [searchValue, setSearchValue] = useState<string>('')
+  const [tracks, loadingTracks, error] = useYoutubeVideos(searchValue)
+  const [msg, setMsg] = useState<string>('')
+  const [isSnackBarOpen, setIsSnackBarOpen] = useState<boolean>(false)
   const { socket } = useSocket()
   const router: NextRouter = useRouter()
 
@@ -128,7 +131,29 @@ const Songs: NextPage = (): JSX.Element => {
     [socket, router]
   )
 
-  useEffect(() => {}, [])
+  const addTrackErrorHandler = useCallback(
+    (err: { error: string }) => {
+      setMsg(err.error)
+      setIsSnackBarOpen(true)
+    },
+    [setIsSnackBarOpen, setMsg]
+  )
+
+  const addTrackSocketHandler = useCallback(() => {
+    setMsg('Musica adicionada com sucesso.')
+    setIsSnackBarOpen(true)
+  }, [setMsg, setIsSnackBarOpen])
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('addTrackError', addTrackErrorHandler)
+      socket.on('addTrack', addTrackSocketHandler)
+    }
+    return () => {
+      socket?.off('addTrackError', addTrackErrorHandler)
+      socket?.off('addTrack', addTrackSocketHandler)
+    }
+  }, [socket])
 
   useEffect(() => {
     // if (!loading && !user) router.replace('/login')
@@ -152,7 +177,10 @@ const Songs: NextPage = (): JSX.Element => {
         }}
       >
         <Box border="1px" borderColor="black" borderRadius="999px">
-          {/* <Box component="input" type="text" outline="none" border="none" /> */}
+          <input
+            type="text"
+            onChange={(event) => setSearchValue(event.target.value)}
+          />
         </Box>
         {loadingTracks ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', pt: 5 }}>
@@ -167,6 +195,13 @@ const Songs: NextPage = (): JSX.Element => {
               ))}
           </Box>
         )}
+        <Snackbar
+          open={isSnackBarOpen}
+          autoHideDuration={3000}
+          anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
+          onClose={() => setIsSnackBarOpen(false)}
+          message={msg}
+        />
       </Box>
     </>
   )

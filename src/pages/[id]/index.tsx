@@ -106,6 +106,7 @@ const PlayList: NextPage = (): JSX.Element => {
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false)
   const { socket } = useSocket()
   const [user] = useUser()
+  const [isSnackBarOpen, setIsSnackBarOpen] = useState<boolean>(false)
   const player = usePlayerStore()
   const { mutate } = useSWRConfig()
 
@@ -163,16 +164,22 @@ const PlayList: NextPage = (): JSX.Element => {
     [router, mutate]
   )
 
+  const onUpVoteTrackErrorHandler = useCallback(() => {
+    setIsSnackBarOpen(true)
+  }, [setIsSnackBarOpen])
+
   useEffect(() => {
     if (!socket || !router.isReady) return
     socket?.emit('joinPlaylist', { playlistId: router.query.id })
     socket?.on('addTrack', addTrackHandler)
     socket?.on('deleteTrack', deleteTrack)
     socket?.on('upVoteTrack', onUpVote)
+    socket?.on('upVoteTrackError', onUpVoteTrackErrorHandler)
     return () => {
       socket.off('upVoteTrack', onUpVote)
       socket.off('addTrack', addTrackHandler)
       socket.off('deleteTrack', deleteTrack)
+      socket?.off('upVoteTrackError', onUpVoteTrackErrorHandler)
     }
   }, [socket, router])
 
@@ -250,6 +257,13 @@ const PlayList: NextPage = (): JSX.Element => {
         onClose={() => setShowSnackbar(false)}
         message="Nova musica adicionada a playlist."
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      />
+      <Snackbar
+        open={isSnackBarOpen}
+        autoHideDuration={3000}
+        anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
+        onClose={() => setIsSnackBarOpen(false)}
+        message="Voce não pode dar upvote duas vezes na mesma música."
       />
     </>
   )
