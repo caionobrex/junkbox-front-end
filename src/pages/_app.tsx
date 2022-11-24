@@ -30,6 +30,7 @@ function MyApp({ Component, pageProps, router }: AppProps) {
           href="https://fonts.googleapis.com/icon?family=Material+Icons"
         />
         <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#794B2F" />
       </Head>
       <Component {...pageProps} key={router.route} />
       {!loading && user && !error && currentTrack && <Player />}
