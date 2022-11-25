@@ -47,19 +47,22 @@ const NewPlayList: NextPage = (): JSX.Element => {
   const watchIsPrivate = watch('isPrivate')
   const watchLimitSongs = watch('limitSongs')
 
-  const onSubmitHandler = useCallback((values: FormSchema): Promise<void> => {
-    return api
-      .post('/playlists', {
-        name: values.name,
-        maxLength: values.limitSongs ? values.maxSongs : null,
-        isPrivate: values.isPrivate,
-        password: values.password,
-        description: 'Testing',
-      })
-      .then((res: AxiosResponse) => {
-        router.push(`/${res.data.id}`)
-      })
-  }, [])
+  const onSubmitHandler = useCallback(
+    (values: FormSchema): Promise<void> => {
+      return api
+        .post('/playlists', {
+          name: values.name,
+          maxLength: values.limitSongs ? values.maxSongs : null,
+          isPrivate: values.isPrivate,
+          password: values.password,
+          description: 'Testing',
+        })
+        .then((res: AxiosResponse) => {
+          router.push(`/${res.data.id}`)
+        })
+    },
+    [router]
+  )
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login')

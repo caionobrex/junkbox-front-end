@@ -21,15 +21,40 @@ interface Track {
   playlistId: number
 }
 
+interface User {
+  id: number
+  email: string
+  name: string
+  avatar: string | null
+  ip: string
+  allowDedication: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+interface Playlist {
+  id: number
+  image: string | null
+  name: string
+  maxLength: number
+  description: string
+  tracksCount: number
+  user: User
+  userId: number
+  isPrivate: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 interface PlayerState {
   currentTrack: Track | null
   currentTime: number
-  playlistId: number | null
-  playlist: Track[]
+  playlist: Playlist | null
+  tracks: Track[]
   isPlaying: boolean
-  setPlaylistId: (playlistId: number) => void
+  setPlaylist: (playlist: Playlist) => void
   setCurrentTrack: (currentTrack: Track) => void
-  setPlaylist: (playlist: Track[]) => void
+  setTracks: (tracks: Track[]) => void
   setCurrentTime: (currentTime: number) => void
   deleteTrack: (trackId: number) => void
   play: () => void
@@ -42,19 +67,19 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   currentTrack: null,
   currentTime: 0,
   isPlaying: false,
-  playlistId: null,
-  playlist: [],
-  setPlaylistId: (playlistId: number) => set(() => ({ playlistId })),
+  playlist: null,
+  tracks: [],
+  setPlaylist: (playlist: Playlist) => set(() => ({ playlist })),
   setCurrentTrack: (currentTrack: Track) => set(() => ({ currentTrack })),
   addTrack: (track: Track) =>
-    set(({ playlist }) => ({
-      playlist: [...playlist, track].sort((a, b) =>
+    set(({ tracks }) => ({
+      tracks: [...tracks, track].sort((a, b) =>
         a.upvoteCount > b.upvoteCount ? -1 : 1
       ),
     })),
   deleteTrack: (trackId: number) =>
-    set(({ playlist }) => ({
-      playlist: playlist
+    set(({ tracks }) => ({
+      tracks: tracks
         .filter((track) => track.id !== trackId)
         .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1)),
     })),
@@ -62,8 +87,8 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   pause: () => set(() => ({ isPlaying: false })),
   toggle: () => set((state) => ({ isPlaying: !state.isPlaying })),
   setCurrentTime: (currentTime: number) => set(() => ({ currentTime })),
-  setPlaylist: (playlist: Track[]) =>
-    set(() => ({ playlist: playlist.map((p, i) => ({ ...p, position: i })) })),
+  setTracks: (tracks: Track[]) =>
+    set(() => ({ tracks: tracks.map((p, i) => ({ ...p, position: i })) })),
 }))
 
 export default function Player(): JSX.Element {
@@ -102,8 +127,8 @@ export default function Player(): JSX.Element {
 
   const handleOnEnd = useCallback(() => {
     if (!player.currentTrack) return
-    if (player.currentTrack.position === player.playlist.length - 1) return
-    const nextTrack = player.playlist[player.currentTrack.position + 1]
+    if (player.currentTrack.position === player.tracks.length - 1) return
+    const nextTrack = player.tracks[player.currentTrack.position + 1]
     if (socket) {
       // socket?.emit('deleteTrack', {
       //   playlistId: player.playlistId,
@@ -122,18 +147,19 @@ export default function Player(): JSX.Element {
     []
   )
 
-  const onAddTrack = useCallback((track: Track) => {
-    player.addTrack(track)
-  }, [])
+  const onAddTrack = useCallback(
+    (track: Track) => {
+      player.addTrack({ ...track, position: player.tracks.length })
+    },
+    [player.tracks]
+  )
 
   const playTrackHandler = useCallback(
     (track: Track, trackPosition: number) => {
-      console.log(track.id)
-      console.log(trackPosition)
-      // if (user.id === player.playlistId) return
-      // player.setCurrentTrack({ ...track, position: trackPosition })
+      if (user.id !== player.playlist?.userId)
+        player.setCurrentTrack({ ...track, position: trackPosition })
     },
-    [user, player.playlistId]
+    [user, player.playlist]
   )
 
   useEffect(() => {
@@ -217,13 +243,17 @@ export default function Player(): JSX.Element {
             </Typography>
           </Box>
         </Box>
-        <IconButton onClick={toggle} sx={{ mr: 1 }}>
-          {player.isPlaying ? (
-            <Icon sx={{ color: theme.palette.primary.main }}>pause_arrow</Icon>
-          ) : (
-            <Icon sx={{ color: theme.palette.primary.main }}>play_arrow</Icon>
-          )}
-        </IconButton>
+        {user.id === player.playlist?.userId && (
+          <IconButton onClick={toggle} sx={{ mr: 1 }}>
+            {player.isPlaying ? (
+              <Icon sx={{ color: theme.palette.primary.main }}>
+                pause_arrow
+              </Icon>
+            ) : (
+              <Icon sx={{ color: theme.palette.primary.main }}>play_arrow</Icon>
+            )}
+          </IconButton>
+        )}
         {/* <button type="button" onClick={previousOne}>
           previus
         </button>
@@ -233,9 +263,11 @@ export default function Player(): JSX.Element {
         <button type="button" onClick={skipTo(200)}>
           skip
         </button> */}
-        <button type="button" onClick={skipTo()}>
-          dsa
-        </button>
+        {user.id === player.playlist?.userId && (
+          <button type="button" onClick={skipTo()}>
+            dsa
+          </button>
+        )}
       </Box>
     </Box>
   )

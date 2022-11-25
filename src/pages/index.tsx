@@ -85,9 +85,6 @@ const Home: NextPage = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Playlists
           </Typography>
-          {/* <IconButton color="inherit">
-            <Icon>person</Icon>
-          </IconButton> */}
           <Link href="/login">login</Link>
         </Toolbar>
       </AppBar>

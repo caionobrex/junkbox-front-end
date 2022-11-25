@@ -6,6 +6,8 @@ import {
   CardContent,
   CardMedia,
   CircularProgress,
+  Icon,
+  IconButton,
   Snackbar,
   TextField,
   Toolbar,
@@ -165,6 +167,16 @@ const Songs: NextPage = (): JSX.Element => {
     <>
       <AppBar position="static">
         <Toolbar>
+          <IconButton
+            size="large"
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            sx={{ mr: 2 }}
+            onClick={() => router.back()}
+          >
+            <Icon>arrow_back</Icon>
+          </IconButton>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Adicionar Música
           </Typography>

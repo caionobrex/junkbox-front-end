@@ -142,7 +142,7 @@ const PlayList: NextPage = (): JSX.Element => {
               return track
             })
             .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1))
-          player.setPlaylist(current)
+          player.setTracks(current)
           return current
         },
         { revalidate: false }
@@ -179,6 +179,14 @@ const PlayList: NextPage = (): JSX.Element => {
     [router, mutate]
   )
 
+  const playTrackHandler = useCallback(
+    (track: Track, trackPosition: number) => {
+      if (user.id !== player.playlist?.userId)
+        player.setCurrentTrack({ ...track, position: trackPosition })
+    },
+    [user, player.playlist]
+  )
+
   const onUpVoteTrackErrorHandler = useCallback(() => {
     setIsSnackBarOpen(true)
   }, [setIsSnackBarOpen])
@@ -190,6 +198,7 @@ const PlayList: NextPage = (): JSX.Element => {
     socket?.on('deleteTrack', deleteTrack)
     socket?.on('upVoteTrack', onUpVote)
     socket?.on('upVoteTrackError', onUpVoteTrackErrorHandler)
+    socket?.on('playTrack', playTrackHandler)
     return () => {
       socket.off('upVoteTrack', onUpVote)
       socket.off('addTrack', addTrackHandler)
@@ -202,14 +211,25 @@ const PlayList: NextPage = (): JSX.Element => {
     <>
       <AppBar position="fixed">
         <Toolbar>
+          <IconButton
+            size="large"
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            sx={{ mr: 2 }}
+            onClick={() => router.back()}
+          >
+            <Icon>arrow_back</Icon>
+          </IconButton>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Playlist
           </Typography>
           {!loading && playlist && playlist.userId === user.id && (
             <IconButton
               onClick={() => {
-                player.setPlaylistId(playlist.id)
-                player.setPlaylist(tracks)
+                if (tracks.length === 0) return
+                player.setPlaylist(playlist)
+                player.setTracks(tracks)
                 player.setCurrentTrack({ ...tracks[0], position: 0 })
                 socket?.emit('playTrack', {
                   trackId: tracks[0].id,
