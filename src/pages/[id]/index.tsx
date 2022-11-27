@@ -48,6 +48,7 @@ function PlaylistItemCard({
   onUpVote: any
 }) {
   const theme = useTheme()
+  const { currentTrack } = usePlayerStore()
 
   return (
     <Card sx={{ display: 'flex' }}>
@@ -87,12 +88,22 @@ function PlaylistItemCard({
           }}
         >
           <Box sx={{ display: 'flex', columnGap: 1 }}>
-            <Typography>
-              Posição:{' '}
-              <Box component="span" sx={{ fontWeight: 700 }}>
-                {track.position}
+            {currentTrack?.id === track.id ? (
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', columnGap: 0.5 }}
+              >
+                <Icon sx={{ color: theme.palette.primary.main }}>
+                  pause_arrow
+                </Icon>
               </Box>
-            </Typography>
+            ) : (
+              <Typography>
+                Posição:{' '}
+                <Box component="span" sx={{ fontWeight: 700 }}>
+                  {track.position}
+                </Box>
+              </Typography>
+            )}
           </Box>
           <Box>
             <IconButton onClick={() => onUpVote(track.id)}>
@@ -274,6 +285,10 @@ const PlayList: NextPage = (): JSX.Element => {
           <Box sx={{ display: 'flex', justifyContent: 'center', pt: 5 }}>
             <CircularProgress />
           </Box>
+        ) : tracks.length === 0 ? (
+          <Typography sx={{ textAlign: 'center', mt: 3 }}>
+            Playlist vazia
+          </Typography>
         ) : (
           <>
             {tracks
