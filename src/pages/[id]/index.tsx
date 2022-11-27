@@ -141,7 +141,13 @@ const PlayList: NextPage = (): JSX.Element => {
               }
               return track
             })
-            .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1))
+            .sort((a, b) =>
+              a.upvoteCount > b.upvoteCount
+                ? -1
+                : a.upvoteCount === b.upvoteCount && a.id < b.id
+                ? -1
+                : 1
+            )
           player.setTracks(current)
           return current
         },
@@ -171,7 +177,11 @@ const PlayList: NextPage = (): JSX.Element => {
           current
             .filter((track: Track) => track.id !== trackId)
             .sort((a: Track, b: Track) =>
-              a.upvoteCount > b.upvoteCount ? -1 : 1
+              a.upvoteCount > b.upvoteCount
+                ? -1
+                : a.upvoteCount === b.upvoteCount && a.id < b.id
+                ? -1
+                : 1
             ),
         { revalidate: false }
       )
@@ -204,6 +214,7 @@ const PlayList: NextPage = (): JSX.Element => {
       socket.off('addTrack', addTrackHandler)
       socket.off('deleteTrack', deleteTrack)
       socket?.off('upVoteTrackError', onUpVoteTrackErrorHandler)
+      socket?.off('playTrack', playTrackHandler)
     }
   }, [socket, router])
 
@@ -233,7 +244,7 @@ const PlayList: NextPage = (): JSX.Element => {
                 player.setCurrentTrack({ ...tracks[0], position: 0 })
                 socket?.emit('playTrack', {
                   trackId: tracks[0].id,
-                  trackPosition: 1,
+                  trackPosition: 0,
                 })
                 player.toggle()
               }}
@@ -266,13 +277,13 @@ const PlayList: NextPage = (): JSX.Element => {
         ) : (
           <>
             {tracks
-              .filter((track: Track) =>
-                tracks.length === 1
-                  ? true
-                  : player.currentTrack
-                  ? track.id !== player.currentTrack.id
-                  : true
-              )
+              // .filter((track: Track) =>
+              //   tracks.length === 1
+              //     ? true
+              //     : player.currentTrack
+              //     ? track.id !== player.currentTrack.id
+              //     : true
+              // )
               .map((track: Track, index: number) => (
                 <PlaylistItemCard
                   key={track.id}

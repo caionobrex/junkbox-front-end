@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 /* eslint-disable consistent-return */
 import {
   Box,
@@ -82,14 +83,25 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   addTrack: (track: Track) =>
     set(({ tracks }) => ({
       tracks: [...tracks, track].sort((a, b) =>
-        a.upvoteCount > b.upvoteCount ? -1 : 1
+        a.upvoteCount > b.upvoteCount
+          ? -1
+          : a.upvoteCount === b.upvoteCount && a.id < b.id
+          ? -1
+          : 1
       ),
     })),
   deleteTrack: (trackId: number) =>
     set(({ tracks }) => ({
       tracks: tracks
         .filter((track) => track.id !== trackId)
-        .sort((a, b) => (a.upvoteCount > b.upvoteCount ? -1 : 1)),
+        .map((t, i) => ({ ...t, position: i }))
+        .sort((a, b) =>
+          a.upvoteCount > b.upvoteCount
+            ? -1
+            : a.upvoteCount === b.upvoteCount && a.id < b.id
+            ? -1
+            : 1
+        ),
     })),
   play: () => set(() => ({ isPlaying: true })),
   pause: () => set(() => ({ isPlaying: false })),
@@ -222,31 +234,38 @@ export default function Player(): JSX.Element {
     if (!player.currentTrack) return
     if (player?.currentTrack?.position === 0) return
     player.setCurrentTrack(player.tracks[player.currentTrack.position - 1])
-  }, [player.tracks, player.currentTime])
+  }, [player.tracks, player.currentTrack, player.setCurrentTrack])
 
   const nextOne = useCallback(() => {
     if (!player.currentTrack) return
     if (player?.currentTrack?.position === player.tracks.length - 1) return
     player.setCurrentTrack(player.tracks[player.currentTrack.position + 1])
-  }, [player.tracks, player.currentTrack])
+  }, [player.tracks, player.currentTrack, player.setCurrentTrack])
 
   const handleOnEnd = useCallback(() => {
     if (!player.currentTrack) return
     if (player.currentTrack.position === player.tracks.length - 1) return
     player.setCurrentTime(0)
     const nextTrack = player.tracks[player.currentTrack.position + 1]
-    if (socket) {
-      // socket?.emit('deleteTrack', {
-      //   playlistId: player.playlistId,
-      //   trackId: player.currentTrack.id,
-      // })
+    if (socket && player.playlist) {
+      socket?.emit('deleteTrack', {
+        playlistId: player.playlist.id,
+        trackId: player.currentTrack.id,
+      })
       socket?.emit('playTrack', {
         trackId: nextTrack.id,
         trackPosition: nextTrack.position,
       })
     }
     player.setCurrentTrack(nextTrack)
-  }, [player, socket])
+  }, [
+    player.currentTrack,
+    player.tracks,
+    player.playlist,
+    player.setCurrentTime,
+    player.setCurrentTrack,
+    socket,
+  ])
 
   const onDeleteTrack = useCallback(
     (_playlistId: number, trackId: number) => player.deleteTrack(trackId),
@@ -255,9 +274,9 @@ export default function Player(): JSX.Element {
 
   const onAddTrack = useCallback(
     (track: Track) => {
-      player.addTrack({ ...track, position: player.tracks.length })
+      player.addTrack({ ...track, position: player.tracks.length - 1 })
     },
-    [player.tracks]
+    [player.tracks, player.addTrack]
   )
 
   const playTrackHandler = useCallback(
@@ -363,15 +382,6 @@ export default function Player(): JSX.Element {
               )}
             </IconButton>
           )}
-          {/* <button type="button" onClick={previousOne}>
-          previus
-        </button>
-        <button type="button" onClick={nextOne}>
-          ds
-        </button>
-        <button type="button" onClick={skipTo(200)}>
-          skip
-        </button> */}
           {user.id === player.playlist?.userId && (
             <button type="button" onClick={() => setIsOpen(true)}>
               dsa
