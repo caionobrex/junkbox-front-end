@@ -370,22 +370,24 @@ export default function Player(): JSX.Element {
             </Box>
           </Box>
           {user.id === player.playlist?.userId && (
-            <IconButton onClick={toggle} sx={{ mr: 1 }}>
-              {player.isPlaying ? (
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <IconButton onClick={toggle}>
+                {player.isPlaying ? (
+                  <Icon sx={{ color: theme.palette.primary.main }}>
+                    pause_arrow
+                  </Icon>
+                ) : (
+                  <Icon sx={{ color: theme.palette.primary.main }}>
+                    play_arrow
+                  </Icon>
+                )}
+              </IconButton>
+              <IconButton onClick={() => setIsOpen(true)}>
                 <Icon sx={{ color: theme.palette.primary.main }}>
-                  pause_arrow
+                  expand_less
                 </Icon>
-              ) : (
-                <Icon sx={{ color: theme.palette.primary.main }}>
-                  play_arrow
-                </Icon>
-              )}
-            </IconButton>
-          )}
-          {user.id === player.playlist?.userId && (
-            <button type="button" onClick={() => setIsOpen(true)}>
-              dsa
-            </button>
+              </IconButton>
+            </Box>
           )}
         </Box>
       </Box>
