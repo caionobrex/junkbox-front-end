@@ -182,7 +182,7 @@ function ExpandedPlayer({
           </IconButton>
         </Box>
         <Box>
-          <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
+          <Stack spacing={1} direction="row" sx={{ mb: 1 }} alignItems="center">
             <Slider
               aria-label="Volume"
               step={0.1}
@@ -199,6 +199,36 @@ function ExpandedPlayer({
               }}
             />
           </Stack>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Typography
+              component="span"
+              sx={{ fontWeight: '500', color: theme.palette.grey[800] }}
+            >
+              {player.currentTrack
+                ? `${Math.floor(player.currentTime / 60)}:${
+                    player.currentTime % 60 < 10
+                      ? `0${(player.currentTime % 60).toFixed()}`
+                      : (player.currentTime % 60).toFixed()
+                  }`
+                : '00:00'}
+            </Typography>
+            <Typography
+              component="span"
+              sx={{ fontWeight: '500', color: theme.palette.grey[600] }}
+            >
+              {player.currentTrack
+                ? `${Math.floor(player.currentTrack.duration / 60)}:${
+                    player.currentTrack.duration % 60
+                  }`
+                : '00:00'}
+            </Typography>
+          </Box>
         </Box>
       </Box>
     </Box>

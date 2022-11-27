@@ -17,6 +17,7 @@ import Link from 'next/link'
 import Router from 'next/router'
 import { useCallback } from 'react'
 import usePlaylists from '@/hooks/dataHooks/usePlaylists'
+import useUser from '@/hooks/dataHooks/useUser'
 
 function PlaylistCard({ playlist }: any) {
   return (
@@ -61,6 +62,7 @@ function PlaylistCard({ playlist }: any) {
 
 const Home: NextPage = () => {
   const [playlists, loading, error] = usePlaylists()
+  const [user, loadingUser] = useUser()
 
   const handleOnClickFab = useCallback(() => Router.push('/new-playlist'), [])
 
@@ -85,7 +87,7 @@ const Home: NextPage = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Playlists
           </Typography>
-          <Link href="/login">login</Link>
+          {!loadingUser && !user && <Link href="/login">login</Link>}
         </Toolbar>
       </AppBar>
       <Box
