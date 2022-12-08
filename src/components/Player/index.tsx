@@ -242,7 +242,7 @@ export default function Player(): JSX.Element {
   const player = usePlayerStore()
   const theme = useTheme()
   const ref = createRef<ReactPlayer>()
-  const [user] = useUser()
+  const [user, loadingUser] = useUser()
 
   const toggle = useCallback(() => {
     if (player.isPlaying) player.pause()
@@ -263,14 +263,26 @@ export default function Player(): JSX.Element {
   const previousOne = useCallback(() => {
     if (!player.currentTrack) return
     if (player?.currentTrack?.position === 0) return
-    player.setCurrentTrack(player.tracks[player.currentTrack.position - 1])
-  }, [player.tracks, player.currentTrack, player.setCurrentTrack])
+    const previousTrack: Track = player.tracks[player.currentTrack.position - 1]
+    player.setCurrentTrack(previousTrack)
+    if (socket)
+      socket.emit('playTrack', {
+        trackId: previousTrack.id,
+        trackPosition: previousTrack.position,
+      })
+  }, [player.tracks, player.currentTrack, player.setCurrentTrack, socket])
 
   const nextOne = useCallback(() => {
     if (!player.currentTrack) return
     if (player?.currentTrack?.position === player.tracks.length - 1) return
-    player.setCurrentTrack(player.tracks[player.currentTrack.position + 1])
-  }, [player.tracks, player.currentTrack, player.setCurrentTrack])
+    const nextTrack: Track = player.tracks[player.currentTrack.position + 1]
+    player.setCurrentTrack(nextTrack)
+    if (socket)
+      socket.emit('playTrack', {
+        trackId: nextTrack.id,
+        trackPosition: nextTrack.position,
+      })
+  }, [player.tracks, player.currentTrack, player.setCurrentTrack, socket])
 
   const handleOnEnd = useCallback(() => {
     if (!player.currentTrack) return
@@ -311,10 +323,11 @@ export default function Player(): JSX.Element {
 
   const playTrackHandler = useCallback(
     (track: Track, trackPosition: number) => {
-      if (user.id !== player.playlist?.userId)
+      if (!loadingUser && user.id !== player.playlist?.user.id) {
         player.setCurrentTrack({ ...track, position: trackPosition })
+      }
     },
-    [user, player.playlist]
+    [user, loadingUser, player.playlist, player.setCurrentTrack]
   )
 
   useEffect(() => {
@@ -333,7 +346,7 @@ export default function Player(): JSX.Element {
       socket.off('deleteTrack', onDeleteTrack)
       socket?.off('playTrack', playTrackHandler)
     }
-  }, [socket])
+  }, [socket, player.playlist])
 
   return (
     <>

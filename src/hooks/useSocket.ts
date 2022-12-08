@@ -10,11 +10,16 @@ export default function useSocket(): {
   const [connected, setConnected] = useState<boolean>(false)
 
   useEffect(() => {
-    setSocket(getSocket(localStorage.getItem('token')))
-  }, [])
+    if (!socket) setSocket(getSocket(localStorage.getItem('token')))
+  }, [socket])
 
   useEffect(() => {
-    socket?.on('connect', () => setConnected(true))
+    socket?.on('connect', () => {
+      setConnected(true)
+    })
+    socket?.on('disconnect', () => {
+      // setConnected(false)
+    })
   }, [socket])
 
   return { socket, connected }

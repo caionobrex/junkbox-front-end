@@ -130,8 +130,8 @@ const PlayList: NextPage = (): JSX.Element => {
     typeof router.query.id === 'string' ? router.query.id : ''
   )
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false)
-  const { socket } = useSocket()
-  const [user] = useUser()
+  const { socket, connected } = useSocket()
+  const [user, loadingUser] = useUser()
   const [isSnackBarOpen, setIsSnackBarOpen] = useState<boolean>(false)
   const player = usePlayerStore()
   const { mutate } = useSWRConfig()
@@ -202,10 +202,11 @@ const PlayList: NextPage = (): JSX.Element => {
 
   const playTrackHandler = useCallback(
     (track: Track, trackPosition: number) => {
-      if (user.id !== player.playlist?.userId)
+      if (!loadingUser && user.id !== player.playlist?.user.id) {
         player.setCurrentTrack({ ...track, position: trackPosition })
+      }
     },
-    [user, player.playlist]
+    [user, loadingUser, player]
   )
 
   const onUpVoteTrackErrorHandler = useCallback(() => {
@@ -227,7 +228,7 @@ const PlayList: NextPage = (): JSX.Element => {
       socket?.off('upVoteTrackError', onUpVoteTrackErrorHandler)
       socket?.off('playTrack', playTrackHandler)
     }
-  }, [socket, router])
+  }, [socket, router, player.playlist])
 
   return (
     <>
@@ -253,10 +254,12 @@ const PlayList: NextPage = (): JSX.Element => {
                 player.setPlaylist(playlist)
                 player.setTracks(tracks)
                 player.setCurrentTrack({ ...tracks[0], position: 0 })
-                socket?.emit('playTrack', {
-                  trackId: tracks[0].id,
-                  trackPosition: 0,
-                })
+                if (connected) {
+                  socket?.emit('playTrack', {
+                    trackId: tracks[0].id,
+                    trackPosition: 0,
+                  })
+                }
                 player.toggle()
               }}
             >
