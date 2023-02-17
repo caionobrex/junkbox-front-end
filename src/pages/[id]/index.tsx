@@ -130,7 +130,7 @@ const PlayList: NextPage = (): JSX.Element => {
     typeof router.query.id === 'string' ? router.query.id : ''
   )
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false)
-  const { socket, connected } = useSocket()
+  const { socket } = useSocket()
   const [user, loadingUser] = useUser()
   const [isSnackBarOpen, setIsSnackBarOpen] = useState<boolean>(false)
   const player = usePlayerStore()
@@ -254,7 +254,7 @@ const PlayList: NextPage = (): JSX.Element => {
                 player.setPlaylist(playlist)
                 player.setTracks(tracks)
                 player.setCurrentTrack({ ...tracks[0], position: 0 })
-                if (connected) {
+                if (socket?.connected) {
                   socket?.emit('playTrack', {
                     trackId: tracks[0].id,
                     trackPosition: 0,

@@ -340,7 +340,7 @@ export default function Player(): JSX.Element {
     if (!socket) return
     socket.on('addTrack', onAddTrack)
     socket.on('deleteTrack', onDeleteTrack)
-    socket?.on('playTrack', playTrackHandler)
+    socket.on('playTrack', playTrackHandler)
     return () => {
       socket.off('addTrack', onAddTrack)
       socket.off('deleteTrack', onDeleteTrack)
